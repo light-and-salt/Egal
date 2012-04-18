@@ -13,6 +13,20 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "D1D50CB7153E8E4600F11B73"
+               BuildableName = "libCCN.a"
+               BlueprintName = "CCN"
+               ReferencedContainer = "container:../../Library/CCN/CCN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "D1D50EC7153E91D500F11B73"
                BuildableName = "test"
                BlueprintName = "test"
