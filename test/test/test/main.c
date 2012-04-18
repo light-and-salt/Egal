@@ -338,8 +338,8 @@ storeHandler(struct ccn_closure *selfp,
     }
     return ret;
 }
-*/
 
+*/
 
 /*
 static int
@@ -497,10 +497,131 @@ struct SimpleStruct
     int z;
 };
 
-static enum ccn_upcall_res callback()
+static enum ccn_upcall_res callback(struct ccn_closure *selfp,
+                                    enum ccn_upcall_kind kind,
+                                    struct ccn_upcall_info *info)
 {
     printf("Call Back!\n");
-    return 0;
+    
+    struct SimpleStruct *sfd = selfp->data;
+    enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
+    switch (kind) {
+        case CCN_UPCALL_FINAL:
+            printf("CCN_UPCALL_FINAL\n");
+            free(selfp);
+            break;
+        case CCN_UPCALL_INTEREST: {
+            printf("CCN_UPCALL_INTEREST\n");
+            /*
+            int64_t seg = segFromInfo(info);
+            if (seg < 0) seg = 0;
+            struct ccn_charbuf *uri = ccn_charbuf_create();
+            ccn_uri_append(uri, sfd->nm->buf, sfd->nm->length, 0);
+            char *str = ccn_charbuf_as_string(uri);
+            ret = CCN_UPCALL_RESULT_INTEREST_CONSUMED;
+            if (seg >= 0 && seg < sfd->nSegs) {
+                struct ccn_charbuf *name = SyncCopyName(sfd->nm);
+                struct ccn_charbuf *cb = ccn_charbuf_create();
+                struct ccn_charbuf *cob = ccn_charbuf_create();
+                off_t bs = sfd->bs;
+                off_t pos = seg * bs;
+                off_t rs = sfd->fSize - pos;
+                if (rs > bs) rs = bs;
+                
+                ccn_charbuf_reserve(cb, rs);
+                cb->length = rs;
+                char *cp = ccn_charbuf_as_string(cb);
+                
+                // fill in the contents
+                int res = fseeko(sfd->file, pos, SEEK_SET);
+                if (res >= 0) {
+                    res = fread(cp, rs, 1, sfd->file);
+                    if (res < 0) {
+                        char *eMess = strerror(errno);
+                        fprintf(stderr, "ERROR in fread, %s, seg %d, %s\n",
+                                eMess, (int) seg, str);
+                    }
+                } else {
+                    char *eMess = strerror(errno);
+                    fprintf(stderr, "ERROR in fseeko, %s, seg %d, %s\n",
+                            eMess, (int) seg, str);
+                }
+                
+                if (res >= 0) {
+                    struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
+                    const void *cp = NULL;
+                    size_t cs = 0;
+                    sp.type = CCN_CONTENT_DATA;
+                    cp = (const void *) cb->buf;
+                    cs = cb->length;
+                    sp.template_ccnb = sfd->template;
+                    
+                    if (seg+1 == sfd->nSegs) sp.sp_flags |= CCN_SP_FINAL_BLOCK;
+                    ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, seg);
+                    res |= ccn_sign_content(sfd->ccn,
+                                            cob,
+                                            name,
+                                            &sp,
+                                            cp,
+                                            rs);
+                    if (sfd->parms->digest) {
+                        // not sure if this generates the right hash
+                        struct ccn_parsed_ContentObject pcos;
+                        ccn_parse_ContentObject(cob->buf, cob->length,
+                                                &pcos, NULL);
+                        ccn_digest_ContentObject(cob->buf, &pcos);
+                        if (pcos.digest_bytes > 0)
+                            res |= ccn_name_append(name, pcos.digest, pcos.digest_bytes);
+                    }
+                    res |= ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
+                    
+                    if (res < 0) {
+                        return noteErr("seg %d, %s",
+                                       (int) seg,
+                                       str);
+                    } else if (sfd->parms->verbose) {
+                        if (sfd->parms->mark) putMark(stdout);
+                        struct ccn_charbuf *nameUri = ccn_charbuf_create();
+                        ccn_uri_append(nameUri, name->buf, name->length, 0);
+                        char *nameStr = ccn_charbuf_as_string(nameUri);
+                        fprintf(stdout, "put seg %d, %s\n",
+                                (int) seg,
+                                nameStr);
+                        ccn_charbuf_destroy(&nameUri);
+                    }
+                    
+                    // update the tracking
+                    unsigned char uc = sfd->segData[seg];
+                    if (uc == 0) {
+                        uc++;
+                        sfd->stored++;
+                    } else {
+                        if (sfd->parms->noDup) {
+                            fprintf(stderr,
+                                    "ERROR in storeHandler, duplicate segment request, seg %d, %s\n",
+                                    (int) seg, str);
+                        }
+                        if (uc < 255) uc++;
+                    }
+                    sfd->segData[seg] = uc;
+                }
+                
+                ccn_charbuf_destroy(&name);
+                ccn_charbuf_destroy(&cb);
+                ccn_charbuf_destroy(&cob);
+                
+            }
+            ccn_charbuf_destroy(&uri);
+             */
+            break;
+        }
+        default:
+            ret = CCN_UPCALL_RESULT_ERR;
+            printf("CCN_UPCALL_RESULT_ERR\n");
+            break;
+    }
+    return ret;
+
 }
 
 void ExpressInterest()
@@ -547,7 +668,7 @@ void ExpressInterest()
                          cmd,
                          action,
                          template);
-    printf("%d\n", res);
+    ccn_run(ccn, -1);
     
 }
 
