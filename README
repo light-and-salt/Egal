@@ -1,0 +1,7 @@
+CCNxPlugin ReadMe
+- By Zening Qu quzening@gmail.com 04/17/2012
+
+This is an Xcode workspace that is home to three projects:
+- a static library built from CCNx source code (in the Library folder)
+- a bundle which is linked against the static library (in the Plugin folder)
+- a command line utility for testing (in the test folder)
