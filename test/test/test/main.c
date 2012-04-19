@@ -194,6 +194,24 @@ struct SyncTestParms {
     intmax_t fSize;
 };
 
+struct MaxN
+{
+    int max_n;
+    int timestamp;
+};
+
+struct Transform
+{
+    int instanceID;
+    int px;
+    int py;
+    int pz;
+    int rx;
+    int ry;
+    int rz;
+    int timestamp;
+};
+
 struct ContentStruct {
     struct SyncTestParms *parms;
     struct ccn_charbuf *nm;
@@ -204,14 +222,8 @@ struct ContentStruct {
     FILE *file;
     //
     char* type; // MaxN, Transform
-    int MaxN;
-    int instanceID;
-    int px;
-    int py;
-    int pz;
-    int rx;
-    int ry;
-    int rz;
+    struct MaxN * maxn;
+    struct Transform * transform;
     //
     unsigned char *segData;
     int nSegs;
@@ -497,13 +509,52 @@ struct SimpleStruct
     int z;
 };
 
+static int64_t
+segFromInfo(struct ccn_upcall_info *info) {
+	// gets the current segment number for the info
+	// returns -1 if not known
+	if (info == NULL) return -1;
+	const unsigned char *ccnb = info->content_ccnb;
+	struct ccn_indexbuf *cc = info->content_comps;
+	if (cc == NULL || ccnb == NULL) {
+		// go back to the interest
+		cc = info->interest_comps;
+		ccnb = info->interest_ccnb;
+		if (cc == NULL || ccnb == NULL) return -1;
+	}
+	int ns = cc->n;
+	if (ns > 2) {
+		// assume that the segment number is the last component
+		int start = cc->buf[ns - 2];
+		int stop = cc->buf[ns - 1];
+		if (start < stop) {
+			size_t len = 0;
+			const unsigned char *data = NULL;
+			ccn_ref_tagged_BLOB(CCN_DTAG_Component, ccnb, start, stop, &data, &len);
+			if (len > 0 && data != NULL) {
+				// parse big-endian encoded number
+				// TBD: where is this in the library?
+				if (data[0] == CCN_MARKER_SEQNUM) {
+                    int64_t n = 0;
+                    int i = 0;
+                    for (i = 1; i < len; i++) {
+                        n = n * 256 + data[i];
+                    }
+                    return n;
+                }
+			}
+		}
+	}
+	return -1;
+}
+
 static enum ccn_upcall_res callback(struct ccn_closure *selfp,
                                     enum ccn_upcall_kind kind,
                                     struct ccn_upcall_info *info)
 {
     printf("Call Back!\n");
     
-    struct SimpleStruct *sfd = selfp->data;
+    struct ContentStruct *sfd = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
     switch (kind) {
         case CCN_UPCALL_FINAL:
@@ -512,7 +563,7 @@ static enum ccn_upcall_res callback(struct ccn_closure *selfp,
             break;
         case CCN_UPCALL_INTEREST: {
             printf("CCN_UPCALL_INTEREST\n");
-            /*
+            
             int64_t seg = segFromInfo(info);
             if (seg < 0) seg = 0;
             struct ccn_charbuf *uri = ccn_charbuf_create();
@@ -532,20 +583,9 @@ static enum ccn_upcall_res callback(struct ccn_closure *selfp,
                 cb->length = rs;
                 char *cp = ccn_charbuf_as_string(cb);
                 
-                // fill in the contents
-                int res = fseeko(sfd->file, pos, SEEK_SET);
-                if (res >= 0) {
-                    res = fread(cp, rs, 1, sfd->file);
-                    if (res < 0) {
-                        char *eMess = strerror(errno);
-                        fprintf(stderr, "ERROR in fread, %s, seg %d, %s\n",
-                                eMess, (int) seg, str);
-                    }
-                } else {
-                    char *eMess = strerror(errno);
-                    fprintf(stderr, "ERROR in fseeko, %s, seg %d, %s\n",
-                            eMess, (int) seg, str);
-                }
+                int res = 0;
+                cp = "9876543210123456789";
+                
                 
                 if (res >= 0) {
                     struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
@@ -576,18 +616,10 @@ static enum ccn_upcall_res callback(struct ccn_closure *selfp,
                     res |= ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
                     
                     if (res < 0) {
-                        return noteErr("seg %d, %s",
+                        printf("seg %d, %s",
                                        (int) seg,
                                        str);
-                    } else if (sfd->parms->verbose) {
-                        if (sfd->parms->mark) putMark(stdout);
-                        struct ccn_charbuf *nameUri = ccn_charbuf_create();
-                        ccn_uri_append(nameUri, name->buf, name->length, 0);
-                        char *nameStr = ccn_charbuf_as_string(nameUri);
-                        fprintf(stdout, "put seg %d, %s\n",
-                                (int) seg,
-                                nameStr);
-                        ccn_charbuf_destroy(&nameUri);
+                        return -1;
                     }
                     
                     // update the tracking
@@ -597,8 +629,7 @@ static enum ccn_upcall_res callback(struct ccn_closure *selfp,
                         sfd->stored++;
                     } else {
                         if (sfd->parms->noDup) {
-                            fprintf(stderr,
-                                    "ERROR in storeHandler, duplicate segment request, seg %d, %s\n",
+                            printf("ERROR in storeHandler, duplicate segment request, seg %d, %s\n",
                                     (int) seg, str);
                         }
                         if (uc < 255) uc++;
@@ -612,7 +643,7 @@ static enum ccn_upcall_res callback(struct ccn_closure *selfp,
                 
             }
             ccn_charbuf_destroy(&uri);
-             */
+             
             break;
         }
         default:
@@ -627,6 +658,24 @@ static enum ccn_upcall_res callback(struct ccn_closure *selfp,
 void ExpressInterest()
 {
     char* dst = PREFIX;
+    
+    struct SyncTestParms parmStore;
+    struct SyncTestParms *parms = &parmStore;
+    struct SyncBaseStruct *base = SyncNewBase(NULL, NULL, NULL);
+    
+    memset(parms, 0, sizeof(parmStore));
+    
+    parms->mode = 1;
+    parms->scope = 1;
+    parms->syncScope = 2;
+    parms->life = 4;
+    parms->bufs = 4;
+    parms->blockSize = 4096;
+    parms->base = base;
+    parms->resolve = 1;
+    parms->segmented = 1;
+    int bs = parms->blockSize;
+
     int res = 0;
     struct ccn *ccn = NULL;
     ccn = ccn_create();
@@ -644,6 +693,43 @@ void ExpressInterest()
     }
     ccn_create_version(ccn, nm, CCN_V_NOW, 0, 0);
     
+    struct ContentStruct *Data = NEW_STRUCT(1, ContentStruct);
+    struct Transform * trans = NEW_STRUCT(1, Transform);
+    
+    Data->parms = parms;
+    Data->file = NULL;
+    Data->bs = bs;
+    Data->nm = nm;
+    Data->cb = cb;
+    Data->ccn = ccn;
+    Data->fSize = sizeof(struct Transform);
+    Data->nSegs = (Data->fSize + bs -1) / bs;
+    Data->segData = NEW_ANY(Data->nSegs, unsigned char);
+    
+    trans->px = 100;
+    trans->py = 100;
+    trans->pz = 100;
+    trans->rx = 0;
+    trans->ry = 0;
+    trans->rz = 0;
+    
+    Data->transform = trans;
+    
+    {
+        // make a template to govern the timestamp for the segments
+        // this allows duplicate segment requests to return the same hash
+        const unsigned char *vp = NULL;
+        ssize_t vs;
+        SyncGetComponentPtr(nm, SyncComponentCount(nm)-1, &vp, &vs);
+        if (vp != NULL && vs > 0) {
+            Data->template = ccn_charbuf_create();
+            ccnb_element_begin(Data->template, CCN_DTAG_SignedInfo);
+            ccnb_append_tagged_blob(Data->template, CCN_DTAG_Timestamp, vp, vs);
+            ccnb_element_end(Data->template);
+        } else 
+            printf("create template failed\n");
+    }
+
     struct ccn_charbuf *template = SyncGenInterest(NULL,
                                                    1,
                                                    4,
@@ -651,15 +737,11 @@ void ExpressInterest()
     
     struct ccn_closure *action = NEW_STRUCT(1, ccn_closure);
     action->p = callback;
-    struct SimpleStruct *Data = NEW_STRUCT(1, SimpleStruct);
-    Data->x = 10;
-    Data->y = 20;
-    Data->z = 30;
+    
     action->data = Data;
     
     // fire off a listener
     res = ccn_set_interest_filter(ccn, nm, action);
-    printf("%d\n", res);
     ccn_charbuf_append_charbuf(cmd, nm);
     ccn_name_from_uri(cmd, "%C1.R.sw");
     ccn_name_append_nonce(cmd);
