@@ -212,6 +212,9 @@ struct ContentStruct {
     char* type; // MaxN, Transform
     struct MaxN * maxn;
     struct Transform * transform;
+    struct ccn_charbuf * resultbuf;
+    struct ccn_parsed_ContentObject *pcobuf;
+    struct ccn_indexbuf *compsbuf;
     //
     unsigned char *segData;
     int nSegs;
@@ -264,6 +267,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                                     struct ccn_upcall_info *info)
 {
     printf("Write Call Back\n");
+    struct ccn *h = info->h;
     
     struct ContentStruct *sfd = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
@@ -354,7 +358,9 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                 
             }
             ccn_charbuf_destroy(&uri);
-             
+            
+            
+            ccn_set_run_timeout(h, 0);
             break;
         }
         default:
@@ -437,7 +443,7 @@ void WriteToRepo(struct SyncTestParms *parms)
                          cmd,
                          action,
                          template);
-    ccn_run(ccn, 5*1000);
+    ccn_run(ccn, -1);
     
 }
 
@@ -456,13 +462,28 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
         case CCN_UPCALL_CONTENT:
             printf("CCN_UPCALL_CONTENT\n");
             printf("%s\n\n%s\n", info->content_ccnb, info->content_comps->buf);
-            const unsigned char *cp = NULL;
-            size_t cs = 0;
-            size_t ccnb_size = info->pco->offset[CCN_PCO_E];
-            const unsigned char *ccnb = info->content_ccnb;
-            int res = ccn_content_get_value(ccnb, ccnb_size, info->pco,
-                                            &cp, &cs);
-            printf("%s\n", cp);
+            
+            const unsigned char* data;
+            size_t data_size;
+            ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E], info->pco,
+                                  &data, &data_size);
+            printf("%s", data);
+            
+            if (sfd->resultbuf != NULL) {
+                sfd->resultbuf->length = 0;
+                ccn_charbuf_append(sfd->resultbuf,
+                                   info->content_ccnb, info->pco->offset[CCN_PCO_E]);
+            }
+            if (sfd->pcobuf != NULL)
+                memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
+            if (sfd->compsbuf != NULL) {
+                sfd->compsbuf->n = 0;
+                ccn_indexbuf_append(sfd->compsbuf,
+                                    info->content_comps->buf, info->content_comps->n);
+            }
+            char *temp = ccn_charbuf_as_string(sfd->resultbuf);
+            printf("Result Buffer: %s\n", temp);
+            
             break;
         case CCN_UPCALL_CONTENT_BAD:
             printf("CCN_UPCALL_CONTENT_BAD\n");
@@ -500,6 +521,12 @@ void ReadFromRepo(struct SyncTestParms *parms)
     
     
     struct ContentStruct *Data = NEW_STRUCT(1, ContentStruct);
+    Data->resultbuf = ccn_charbuf_create();
+    struct ccn_parsed_ContentObject pcos;
+    Data->pcobuf = &pcos;
+    Data->compsbuf = NULL;
+    
+    
     
     struct ccn_charbuf *template = SyncGenInterest(NULL,
                                                    1,
