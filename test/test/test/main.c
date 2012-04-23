@@ -408,6 +408,13 @@ void WriteToRepo(struct SyncTestParms *parms)
     
     Data->type= "9876543210123456789";
     
+    struct ccn_parsed_ContentObject pcobuf = {0};
+    Data->pcobuf = &pcobuf;
+    
+    struct ccn_charbuf *resultbuf = NULL;
+    resultbuf = ccn_charbuf_create();
+    Data->resultbuf = resultbuf;
+    
     {
         // make a template to govern the timestamp for the segments
         // this allows duplicate segment requests to return the same hash
@@ -463,6 +470,21 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             printf("CCN_UPCALL_CONTENT\n");
             printf("%s\n", info->content_ccnb);
             
+            unsigned char* ptr = NULL;
+            size_t length;
+            
+            if (sfd->resultbuf != NULL) {
+                sfd->resultbuf->length = 0;
+                ccn_charbuf_append(sfd->resultbuf,
+                                   info->content_ccnb, info->pco->offset[CCN_PCO_E]);
+            }
+            if (sfd->pcobuf != NULL)
+                memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
+            
+            ptr = sfd->resultbuf->buf;
+            length = sfd->resultbuf->length;
+            ccn_content_get_value(ptr, length, sfd->pcobuf, &ptr, &length);
+            printf("%s\n", ptr);
             
             break;
         case CCN_UPCALL_CONTENT_BAD:
