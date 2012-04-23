@@ -299,8 +299,8 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                 char *cp = ccn_charbuf_as_string(cb);
                 
                 int res = 0;
-                cp = sfd->type;
-                
+                //cp = sfd->type;
+                strcpy(cp, "9876543210123456789");
                 
                 if (res >= 0) {
                     struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
@@ -456,33 +456,13 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
     struct ContentStruct *sfd = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
     
-    struct ccn* h = info->h;
+    
     
     switch (kind) {
         case CCN_UPCALL_CONTENT:
             printf("CCN_UPCALL_CONTENT\n");
-            printf("%s\n\n%s\n", info->content_ccnb, info->content_comps->buf);
+            printf("%s\n", info->content_ccnb);
             
-            const unsigned char* data;
-            size_t data_size;
-            ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E], info->pco,
-                                  &data, &data_size);
-            printf("%s", data);
-            
-            if (sfd->resultbuf != NULL) {
-                sfd->resultbuf->length = 0;
-                ccn_charbuf_append(sfd->resultbuf,
-                                   info->content_ccnb, info->pco->offset[CCN_PCO_E]);
-            }
-            if (sfd->pcobuf != NULL)
-                memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
-            if (sfd->compsbuf != NULL) {
-                sfd->compsbuf->n = 0;
-                ccn_indexbuf_append(sfd->compsbuf,
-                                    info->content_comps->buf, info->content_comps->n);
-            }
-            char *temp = ccn_charbuf_as_string(sfd->resultbuf);
-            printf("Result Buffer: %s\n", temp);
             
             break;
         case CCN_UPCALL_CONTENT_BAD:
@@ -497,7 +477,7 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
         default:
             break;
     }
-    ccn_set_run_timeout(h, 0);
+    ccn_set_run_timeout(info->h, 0);
     return ret;
 }
 

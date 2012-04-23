@@ -106,7 +106,7 @@
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
-         shouldBeEnabled = "Yes"
+         shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "test/test/test/main.c"
@@ -123,11 +123,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "test/test/test/main.c"
-         timestampString = "356685442.58429"
+         timestampString = "356856330.092571"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "487"
-         endingLineNumber = "487"
+         startingLineNumber = "503"
+         endingLineNumber = "503"
          landmarkName = "ReadCallBack()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -136,12 +136,25 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "test/test/test/main.c"
-         timestampString = "356685442.58429"
+         timestampString = "356856330.092571"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "488"
-         endingLineNumber = "488"
+         startingLineNumber = "504"
+         endingLineNumber = "504"
          landmarkName = "ReadCallBack()"
+         landmarkType = "7">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "No"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "test/test/test/main.c"
+         timestampString = "356853437.62747"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "331"
+         endingLineNumber = "331"
+         landmarkName = "WriteCallBack()"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>
