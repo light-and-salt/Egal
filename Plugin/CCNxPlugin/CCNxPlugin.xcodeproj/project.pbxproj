@@ -1,0 +1,465 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D197C2AF15461521008E1822 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D197C2AE15461521008E1822 /* Cocoa.framework */; };
+		D197C2B915461521008E1822 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D197C2B715461521008E1822 /* InfoPlist.strings */; };
+		D197C2C1154615F1008E1822 /* libCCN.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D197C2C0154615F1008E1822 /* libCCN.a */; };
+		D197C2FF15461779008E1822 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = D197C2E215461779008E1822 /* .gitignore */; };
+		D197C30015461779008E1822 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = D197C2F415461779008E1822 /* .gitignore */; };
+		D197C302154618A5008E1822 /* libexpat.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D197C301154618A5008E1822 /* libexpat.dylib */; };
+		D197C304154618B3008E1822 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D197C303154618B3008E1822 /* libxml2.dylib */; };
+		D197C306154618BD008E1822 /* libpcap.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D197C305154618BD008E1822 /* libpcap.dylib */; };
+		D197C308154618CD008E1822 /* libcrypto.0.9.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D197C307154618CD008E1822 /* libcrypto.0.9.8.dylib */; };
+		D197C30A15461928008E1822 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D197C30915461928008E1822 /* main.c */; };
+		D197C30D15462037008E1822 /* main.h in Sources */ = {isa = PBXBuildFile; fileRef = D197C30C15461953008E1822 /* main.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D197C2AB15461521008E1822 /* CCNxPlugin.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CCNxPlugin.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		D197C2AE15461521008E1822 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		D197C2B115461521008E1822 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		D197C2B215461521008E1822 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		D197C2B315461521008E1822 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		D197C2B615461521008E1822 /* CCNxPlugin-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CCNxPlugin-Info.plist"; sourceTree = "<group>"; };
+		D197C2B815461521008E1822 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D197C2BA15461521008E1822 /* CCNxPlugin-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CCNxPlugin-Prefix.pch"; sourceTree = "<group>"; };
+		D197C2C0154615F1008E1822 /* libCCN.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCCN.a; path = "../../../../Library/Developer/Xcode/DerivedData/CCNx-eqckkurxobexmobziccnkwdwyhgf/Build/Products/Debug/libCCN.a"; sourceTree = "<group>"; };
+		D197C2C415461778008E1822 /* bloom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bloom.h; sourceTree = "<group>"; };
+		D197C2C515461778008E1822 /* btree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btree.h; sourceTree = "<group>"; };
+		D197C2C615461778008E1822 /* btree_content.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btree_content.h; sourceTree = "<group>"; };
+		D197C2C715461778008E1822 /* ccn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccn.h; sourceTree = "<group>"; };
+		D197C2C815461778008E1822 /* ccn_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccn_private.h; sourceTree = "<group>"; };
+		D197C2C915461778008E1822 /* ccnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnd.h; sourceTree = "<group>"; };
+		D197C2CA15461778008E1822 /* charbuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = charbuf.h; sourceTree = "<group>"; };
+		D197C2CB15461778008E1822 /* coding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coding.h; sourceTree = "<group>"; };
+		D197C2CC15461778008E1822 /* digest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = digest.h; sourceTree = "<group>"; };
+		D197C2CD15461778008E1822 /* extend_dict.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = extend_dict.h; sourceTree = "<group>"; };
+		D197C2CE15461778008E1822 /* face_mgmt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = face_mgmt.h; sourceTree = "<group>"; };
+		D197C2CF15461778008E1822 /* fetch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fetch.h; sourceTree = "<group>"; };
+		D197C2D015461778008E1822 /* hashtb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hashtb.h; sourceTree = "<group>"; };
+		D197C2D115461778008E1822 /* header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = header.h; sourceTree = "<group>"; };
+		D197C2D215461778008E1822 /* indexbuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = indexbuf.h; sourceTree = "<group>"; };
+		D197C2D315461778008E1822 /* keystore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keystore.h; sourceTree = "<group>"; };
+		D197C2D415461778008E1822 /* matrix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = matrix.h; sourceTree = "<group>"; };
+		D197C2D515461778008E1822 /* merklepathasn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = merklepathasn1.h; sourceTree = "<group>"; };
+		D197C2D615461778008E1822 /* random.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = random.h; sourceTree = "<group>"; };
+		D197C2D715461778008E1822 /* reg_mgmt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reg_mgmt.h; sourceTree = "<group>"; };
+		D197C2D815461778008E1822 /* schedule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = schedule.h; sourceTree = "<group>"; };
+		D197C2D915461778008E1822 /* seqwriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = seqwriter.h; sourceTree = "<group>"; };
+		D197C2DA15461778008E1822 /* signing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = signing.h; sourceTree = "<group>"; };
+		D197C2DB15461778008E1822 /* sockaddrutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sockaddrutil.h; sourceTree = "<group>"; };
+		D197C2DC15461778008E1822 /* sockcreate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sockcreate.h; sourceTree = "<group>"; };
+		D197C2DD15461778008E1822 /* sync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sync.h; sourceTree = "<group>"; };
+		D197C2DE15461779008E1822 /* uri.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uri.h; sourceTree = "<group>"; };
+		D197C2E015461779008E1822 /* ccnd_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnd_private.h; sourceTree = "<group>"; };
+		D197C2E215461779008E1822 /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		D197C2E315461779008E1822 /* ccnr_dispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_dispatch.h; sourceTree = "<group>"; };
+		D197C2E415461779008E1822 /* ccnr_forwarding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_forwarding.h; sourceTree = "<group>"; };
+		D197C2E515461779008E1822 /* ccnr_init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_init.h; sourceTree = "<group>"; };
+		D197C2E615461779008E1822 /* ccnr_internal_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_internal_client.h; sourceTree = "<group>"; };
+		D197C2E715461779008E1822 /* ccnr_io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_io.h; sourceTree = "<group>"; };
+		D197C2E815461779008E1822 /* ccnr_link.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_link.h; sourceTree = "<group>"; };
+		D197C2E915461779008E1822 /* ccnr_match.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_match.h; sourceTree = "<group>"; };
+		D197C2EA15461779008E1822 /* ccnr_msg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_msg.h; sourceTree = "<group>"; };
+		D197C2EB15461779008E1822 /* ccnr_net.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_net.h; sourceTree = "<group>"; };
+		D197C2EC15461779008E1822 /* ccnr_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_private.h; sourceTree = "<group>"; };
+		D197C2ED15461779008E1822 /* ccnr_proto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_proto.h; sourceTree = "<group>"; };
+		D197C2EE15461779008E1822 /* ccnr_sendq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_sendq.h; sourceTree = "<group>"; };
+		D197C2EF15461779008E1822 /* ccnr_stats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_stats.h; sourceTree = "<group>"; };
+		D197C2F015461779008E1822 /* ccnr_store.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_store.h; sourceTree = "<group>"; };
+		D197C2F115461779008E1822 /* ccnr_sync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_sync.h; sourceTree = "<group>"; };
+		D197C2F215461779008E1822 /* ccnr_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ccnr_util.h; sourceTree = "<group>"; };
+		D197C2F415461779008E1822 /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		D197C2F515461779008E1822 /* IndexSorter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IndexSorter.h; sourceTree = "<group>"; };
+		D197C2F615461779008E1822 /* SyncActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncActions.h; sourceTree = "<group>"; };
+		D197C2F715461779008E1822 /* SyncBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncBase.h; sourceTree = "<group>"; };
+		D197C2F815461779008E1822 /* SyncHashCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncHashCache.h; sourceTree = "<group>"; };
+		D197C2F915461779008E1822 /* SyncMacros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncMacros.h; sourceTree = "<group>"; };
+		D197C2FA15461779008E1822 /* SyncNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncNode.h; sourceTree = "<group>"; };
+		D197C2FB15461779008E1822 /* SyncPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncPrivate.h; sourceTree = "<group>"; };
+		D197C2FC15461779008E1822 /* SyncRoot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncRoot.h; sourceTree = "<group>"; };
+		D197C2FD15461779008E1822 /* SyncTreeWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncTreeWorker.h; sourceTree = "<group>"; };
+		D197C2FE15461779008E1822 /* SyncUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncUtil.h; sourceTree = "<group>"; };
+		D197C301154618A5008E1822 /* libexpat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libexpat.dylib; path = usr/lib/libexpat.dylib; sourceTree = SDKROOT; };
+		D197C303154618B3008E1822 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
+		D197C305154618BD008E1822 /* libpcap.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libpcap.dylib; path = usr/lib/libpcap.dylib; sourceTree = SDKROOT; };
+		D197C307154618CD008E1822 /* libcrypto.0.9.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.0.9.8.dylib; path = usr/lib/libcrypto.0.9.8.dylib; sourceTree = SDKROOT; };
+		D197C30915461928008E1822 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = main.c; path = ../../../test/test/test/main.c; sourceTree = "<group>"; };
+		D197C30C15461953008E1822 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = main.h; path = ../../../test/test/test/main.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D197C2A815461521008E1822 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D197C308154618CD008E1822 /* libcrypto.0.9.8.dylib in Frameworks */,
+				D197C306154618BD008E1822 /* libpcap.dylib in Frameworks */,
+				D197C304154618B3008E1822 /* libxml2.dylib in Frameworks */,
+				D197C302154618A5008E1822 /* libexpat.dylib in Frameworks */,
+				D197C2C1154615F1008E1822 /* libCCN.a in Frameworks */,
+				D197C2AF15461521008E1822 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D197C2A015461521008E1822 = {
+			isa = PBXGroup;
+			children = (
+				D197C307154618CD008E1822 /* libcrypto.0.9.8.dylib */,
+				D197C305154618BD008E1822 /* libpcap.dylib */,
+				D197C303154618B3008E1822 /* libxml2.dylib */,
+				D197C301154618A5008E1822 /* libexpat.dylib */,
+				D197C2C0154615F1008E1822 /* libCCN.a */,
+				D197C2C215461778008E1822 /* header */,
+				D197C2B415461521008E1822 /* CCNxPlugin */,
+				D197C2AD15461521008E1822 /* Frameworks */,
+				D197C2AC15461521008E1822 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D197C2AC15461521008E1822 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2AB15461521008E1822 /* CCNxPlugin.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D197C2AD15461521008E1822 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2AE15461521008E1822 /* Cocoa.framework */,
+				D197C2B015461521008E1822 /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D197C2B015461521008E1822 /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2B115461521008E1822 /* AppKit.framework */,
+				D197C2B215461521008E1822 /* CoreData.framework */,
+				D197C2B315461521008E1822 /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		D197C2B415461521008E1822 /* CCNxPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				D197C30C15461953008E1822 /* main.h */,
+				D197C30915461928008E1822 /* main.c */,
+				D197C2B515461521008E1822 /* Supporting Files */,
+			);
+			path = CCNxPlugin;
+			sourceTree = "<group>";
+		};
+		D197C2B515461521008E1822 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2B615461521008E1822 /* CCNxPlugin-Info.plist */,
+				D197C2B715461521008E1822 /* InfoPlist.strings */,
+				D197C2BA15461521008E1822 /* CCNxPlugin-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		D197C2C215461778008E1822 /* header */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2C315461778008E1822 /* ccn */,
+				D197C2DF15461779008E1822 /* ccnd */,
+				D197C2E115461779008E1822 /* ccnr */,
+				D197C2F315461779008E1822 /* sync */,
+			);
+			path = header;
+			sourceTree = "<group>";
+		};
+		D197C2C315461778008E1822 /* ccn */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2C415461778008E1822 /* bloom.h */,
+				D197C2C515461778008E1822 /* btree.h */,
+				D197C2C615461778008E1822 /* btree_content.h */,
+				D197C2C715461778008E1822 /* ccn.h */,
+				D197C2C815461778008E1822 /* ccn_private.h */,
+				D197C2C915461778008E1822 /* ccnd.h */,
+				D197C2CA15461778008E1822 /* charbuf.h */,
+				D197C2CB15461778008E1822 /* coding.h */,
+				D197C2CC15461778008E1822 /* digest.h */,
+				D197C2CD15461778008E1822 /* extend_dict.h */,
+				D197C2CE15461778008E1822 /* face_mgmt.h */,
+				D197C2CF15461778008E1822 /* fetch.h */,
+				D197C2D015461778008E1822 /* hashtb.h */,
+				D197C2D115461778008E1822 /* header.h */,
+				D197C2D215461778008E1822 /* indexbuf.h */,
+				D197C2D315461778008E1822 /* keystore.h */,
+				D197C2D415461778008E1822 /* matrix.h */,
+				D197C2D515461778008E1822 /* merklepathasn1.h */,
+				D197C2D615461778008E1822 /* random.h */,
+				D197C2D715461778008E1822 /* reg_mgmt.h */,
+				D197C2D815461778008E1822 /* schedule.h */,
+				D197C2D915461778008E1822 /* seqwriter.h */,
+				D197C2DA15461778008E1822 /* signing.h */,
+				D197C2DB15461778008E1822 /* sockaddrutil.h */,
+				D197C2DC15461778008E1822 /* sockcreate.h */,
+				D197C2DD15461778008E1822 /* sync.h */,
+				D197C2DE15461779008E1822 /* uri.h */,
+			);
+			path = ccn;
+			sourceTree = "<group>";
+		};
+		D197C2DF15461779008E1822 /* ccnd */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2E015461779008E1822 /* ccnd_private.h */,
+			);
+			path = ccnd;
+			sourceTree = "<group>";
+		};
+		D197C2E115461779008E1822 /* ccnr */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2E215461779008E1822 /* .gitignore */,
+				D197C2E315461779008E1822 /* ccnr_dispatch.h */,
+				D197C2E415461779008E1822 /* ccnr_forwarding.h */,
+				D197C2E515461779008E1822 /* ccnr_init.h */,
+				D197C2E615461779008E1822 /* ccnr_internal_client.h */,
+				D197C2E715461779008E1822 /* ccnr_io.h */,
+				D197C2E815461779008E1822 /* ccnr_link.h */,
+				D197C2E915461779008E1822 /* ccnr_match.h */,
+				D197C2EA15461779008E1822 /* ccnr_msg.h */,
+				D197C2EB15461779008E1822 /* ccnr_net.h */,
+				D197C2EC15461779008E1822 /* ccnr_private.h */,
+				D197C2ED15461779008E1822 /* ccnr_proto.h */,
+				D197C2EE15461779008E1822 /* ccnr_sendq.h */,
+				D197C2EF15461779008E1822 /* ccnr_stats.h */,
+				D197C2F015461779008E1822 /* ccnr_store.h */,
+				D197C2F115461779008E1822 /* ccnr_sync.h */,
+				D197C2F215461779008E1822 /* ccnr_util.h */,
+			);
+			path = ccnr;
+			sourceTree = "<group>";
+		};
+		D197C2F315461779008E1822 /* sync */ = {
+			isa = PBXGroup;
+			children = (
+				D197C2F415461779008E1822 /* .gitignore */,
+				D197C2F515461779008E1822 /* IndexSorter.h */,
+				D197C2F615461779008E1822 /* SyncActions.h */,
+				D197C2F715461779008E1822 /* SyncBase.h */,
+				D197C2F815461779008E1822 /* SyncHashCache.h */,
+				D197C2F915461779008E1822 /* SyncMacros.h */,
+				D197C2FA15461779008E1822 /* SyncNode.h */,
+				D197C2FB15461779008E1822 /* SyncPrivate.h */,
+				D197C2FC15461779008E1822 /* SyncRoot.h */,
+				D197C2FD15461779008E1822 /* SyncTreeWorker.h */,
+				D197C2FE15461779008E1822 /* SyncUtil.h */,
+			);
+			path = sync;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D197C2AA15461521008E1822 /* CCNxPlugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D197C2BD15461521008E1822 /* Build configuration list for PBXNativeTarget "CCNxPlugin" */;
+			buildPhases = (
+				D197C2A715461521008E1822 /* Sources */,
+				D197C2A815461521008E1822 /* Frameworks */,
+				D197C2A915461521008E1822 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CCNxPlugin;
+			productName = CCNxPlugin;
+			productReference = D197C2AB15461521008E1822 /* CCNxPlugin.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D197C2A215461521008E1822 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+				ORGANIZATIONNAME = REMAP/UCLA;
+			};
+			buildConfigurationList = D197C2A515461521008E1822 /* Build configuration list for PBXProject "CCNxPlugin" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D197C2A015461521008E1822;
+			productRefGroup = D197C2AC15461521008E1822 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D197C2AA15461521008E1822 /* CCNxPlugin */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D197C2A915461521008E1822 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D197C2B915461521008E1822 /* InfoPlist.strings in Resources */,
+				D197C2FF15461779008E1822 /* .gitignore in Resources */,
+				D197C30015461779008E1822 /* .gitignore in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D197C2A715461521008E1822 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D197C30D15462037008E1822 /* main.h in Sources */,
+				D197C30A15461928008E1822 /* main.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		D197C2B715461521008E1822 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				D197C2B815461521008E1822 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		D197C2BB15461521008E1822 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D197C2BC15461521008E1822 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		D197C2BE15461521008E1822 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CCNxPlugin/CCNxPlugin-Prefix.pch";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)\"/**";
+				INFOPLIST_FILE = "CCNxPlugin/CCNxPlugin-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/CCNx-eqckkurxobexmobziccnkwdwyhgf/Build/Products/Debug\"",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)\"/**";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Debug;
+		};
+		D197C2BF15461521008E1822 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "CCNxPlugin/CCNxPlugin-Prefix.pch";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)\"/**";
+				INFOPLIST_FILE = "CCNxPlugin/CCNxPlugin-Info.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../../../../Library/Developer/Xcode/DerivedData/CCNx-eqckkurxobexmobziccnkwdwyhgf/Build/Products/Debug\"",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)\"/**";
+				WRAPPER_EXTENSION = bundle;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D197C2A515461521008E1822 /* Build configuration list for PBXProject "CCNxPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D197C2BB15461521008E1822 /* Debug */,
+				D197C2BC15461521008E1822 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D197C2BD15461521008E1822 /* Build configuration list for PBXNativeTarget "CCNxPlugin" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D197C2BE15461521008E1822 /* Debug */,
+				D197C2BF15461521008E1822 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D197C2A215461521008E1822 /* Project object */;
+}

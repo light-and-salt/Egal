@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:Plugin/CCNxPlugin/CCNxPlugin.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:test/test/test.xcodeproj">
    </FileRef>
    <FileRef

@@ -76,6 +76,8 @@ sync_cb(struct ccns_handle *h,
         struct ccn_charbuf *rhash,
         struct ccn_charbuf *name)
 {
+    printf("sync_cb\n");
+    
     char *hexL;
     char *hexR;
     struct ccn_charbuf *uri = ccn_charbuf_create();
@@ -96,11 +98,74 @@ sync_cb(struct ccns_handle *h,
 }
 
 
-void WriteSlice()
+int WriteSlice(struct ccn* h, char* p, char* t)
 {
-    int opt;
+    
     int res;
-    struct ccn *h;
+    struct ccns_slice *slice;
+    struct ccn_charbuf *prefix = ccn_charbuf_create();
+    struct ccn_charbuf *roothash = NULL;
+    struct ccn_charbuf *topo = ccn_charbuf_create();
+    int timeout = 10*1000;
+    unsigned i, j, n;
+    
+    ccn_name_init(prefix);
+    ccn_name_init(topo);
+    
+    // case 'p':
+    if (0 > ccn_name_from_uri(prefix, p)) 
+    {
+        printf("Prefix Not Right.\n");
+        return -1;
+    }
+    // case 'r':
+    char* temp = "";
+    n = strlen(temp);
+    if (n == 0) {
+        roothash = ccn_charbuf_create();
+    }
+    if ((n % 2) != 0)
+    {
+        printf("Roothash must be even.\n");
+        return -1;
+    }
+    roothash = ccn_charbuf_create_n(n / 2);
+    for (i = 0; i < (n / 2); i++) {
+        j = (hex_value(temp[2*i]) << 4) | hex_value(temp[1+2*i]);
+        ccn_charbuf_append_value(roothash, j, 1);
+    }
+    
+    // case 't':
+    if (0 > ccn_name_from_uri(topo, t)) 
+    {
+        printf("Topo not correct.\n");
+        return -1;
+    }
+                
+    // case 'w':
+    timeout = TIMEOUT;
+    if (timeout < -1) 
+    {
+        printf("Timeout cannot be less than -1");
+        return -1;
+    }
+    timeout *= 1000;
+    
+    
+    
+    slice = ccns_slice_create();
+    ccns_slice_set_topo_prefix(slice, topo, prefix);
+    
+    res = ccns_write_slice(h, slice, prefix);
+    
+    ccns_slice_destroy(&slice);
+    
+    return res;
+}
+
+int WatchOverRepo(struct ccn* h, char* p, char* t)
+{
+    int res;
     struct ccns_slice *slice;
     struct ccns_handle *ccns;
     struct ccn_charbuf *prefix = ccn_charbuf_create();
@@ -113,17 +178,22 @@ void WriteSlice()
     ccn_name_init(topo);
     
     // case 'p':
-    if (0 > ccn_name_from_uri(prefix, PREFIX)) 
+    if (0 > ccn_name_from_uri(prefix, p)) 
+    {
         printf("Prefix Not Right.\n");
-    
+        return -1;
+    }
     // case 'r':
-    char* temp = "00";
+    char* temp = "";
     n = strlen(temp);
     if (n == 0) {
         roothash = ccn_charbuf_create();
     }
     if ((n % 2) != 0)
+    {
         printf("Roothash must be even.\n");
+        return -1;
+    }
     roothash = ccn_charbuf_create_n(n / 2);
     for (i = 0; i < (n / 2); i++) {
         j = (hex_value(temp[2*i]) << 4) | hex_value(temp[1+2*i]);
@@ -131,29 +201,35 @@ void WriteSlice()
     }
     
     // case 't':
-    if (0 > ccn_name_from_uri(topo, TOPO)) 
+    if (0 > ccn_name_from_uri(topo, t)) 
+    {
         printf("Topo not correct.\n");
-                
+        return -1;
+    }
+    
     // case 'w':
     timeout = TIMEOUT;
     if (timeout < -1) 
+    {
         printf("Timeout cannot be less than -1");
+        return -1;
+    }
     timeout *= 1000;
     
     
     
     
-    h = ccn_create();
-    res = ccn_connect(h, NULL);
     slice = ccns_slice_create();
     ccns_slice_set_topo_prefix(slice, topo, prefix);
     
-    ccns_write_slice(h, slice, prefix);
+    ccns = ccns_open(h, slice, &sync_cb, roothash, NULL);
+    
+    // ccns_close(&ccns, NULL, NULL);
     
     ccns_slice_destroy(&slice);
-    ccn_destroy(&h);
     
-
+    
+    return res;
 }
 
 struct SyncTestParms {
@@ -215,6 +291,7 @@ struct ContentStruct {
     struct ccn_charbuf * resultbuf;
     struct ccn_parsed_ContentObject *pcobuf;
     struct ccn_indexbuf *compsbuf;
+    char* value;
     //
     unsigned char *segData;
     int nSegs;
@@ -262,6 +339,27 @@ segFromInfo(struct ccn_upcall_info *info) {
 	return -1;
 }
 
+struct SyncTestParms* SetParameter()
+{
+    struct SyncTestParms parmStore;
+    struct SyncTestParms *parms = &parmStore;
+    struct SyncBaseStruct *base = SyncNewBase(NULL, NULL, NULL);
+    
+    memset(parms, 0, sizeof(parmStore));
+    
+    parms->mode = 1;
+    parms->scope = 1;
+    parms->syncScope = 2;
+    parms->life = 4;
+    parms->bufs = 4;
+    parms->blockSize = 4096;
+    parms->base = base;
+    parms->resolve = 1;
+    
+    
+    return parms;
+}
+
 static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                                     enum ccn_upcall_kind kind,
                                     struct ccn_upcall_info *info)
@@ -275,6 +373,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
         case CCN_UPCALL_FINAL:
             printf("CCN_UPCALL_FINAL\n");
             free(selfp);
+            
             break;
         case CCN_UPCALL_INTEREST: {
             printf("CCN_UPCALL_INTEREST\n");
@@ -300,7 +399,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                 
                 int res = 0;
                 //cp = sfd->type;
-                strcpy(cp, "9876543210123456789");
+                strcpy(cp, sfd->value);
                 
                 if (res >= 0) {
                     struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
@@ -358,9 +457,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                 
             }
             ccn_charbuf_destroy(&uri);
-            
-            
-            ccn_set_run_timeout(h, 0);
+                        
             break;
         }
         default:
@@ -372,19 +469,16 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
 
 }
 
-void WriteToRepo(struct SyncTestParms *parms)
+void WriteToRepo(struct ccn* ccn, char* dst, char* value)
 {
-    char* dst = PREFIX;
+    // set sync parameters
+    struct SyncTestParms* parms = SetParameter();
+    
     
     int bs = parms->blockSize;
 
     int res = 0;
-    struct ccn *ccn = NULL;
-    ccn = ccn_create();
-    if (ccn_connect(ccn, NULL) == -1) {
-        printf("could not connect to ccnd.\n");
-    }
-    
+        
     struct ccn_charbuf *cb = ccn_charbuf_create();
     struct ccn_charbuf *nm = ccn_charbuf_create();
     struct ccn_charbuf *cmd = ccn_charbuf_create();
@@ -406,7 +500,7 @@ void WriteToRepo(struct SyncTestParms *parms)
     Data->nSegs = (Data->fSize + bs -1) / bs;
     Data->segData = NEW_ANY(Data->nSegs, unsigned char);
     
-    Data->type= "9876543210123456789";
+    Data->value= value;
     
     struct ccn_parsed_ContentObject pcobuf = {0};
     Data->pcobuf = &pcobuf;
@@ -450,7 +544,6 @@ void WriteToRepo(struct SyncTestParms *parms)
                          cmd,
                          action,
                          template);
-    ccn_run(ccn, -1);
     
 }
 
@@ -468,10 +561,8 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
     switch (kind) {
         case CCN_UPCALL_CONTENT:
             printf("CCN_UPCALL_CONTENT\n");
-            printf("%s\n", info->content_ccnb);
+            // printf("%s\n", info->content_ccnb);
             
-            unsigned char* ptr = NULL;
-            size_t length;
             
             if (sfd->resultbuf != NULL) {
                 sfd->resultbuf->length = 0;
@@ -481,10 +572,7 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             if (sfd->pcobuf != NULL)
                 memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
             
-            ptr = sfd->resultbuf->buf;
-            length = sfd->resultbuf->length;
-            ccn_content_get_value(ptr, length, sfd->pcobuf, &ptr, &length);
-            printf("%s\n", ptr);
+            
             
             break;
         case CCN_UPCALL_CONTENT_BAD:
@@ -503,9 +591,9 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
     return ret;
 }
 
-void ReadFromRepo(struct SyncTestParms *parms)
+char* ReadFromRepo(char* dst)
 {
-    char* dst = PREFIX;
+    
     
     int res = 0;
     struct ccn *ccn = NULL;
@@ -547,42 +635,47 @@ void ReadFromRepo(struct SyncTestParms *parms)
                                template);
     ccn_run(ccn, -1);
     
+    
+    
+
+    // just for debug
+    unsigned char* ptr = NULL;
+    size_t length;
+    ptr = Data->resultbuf->buf;
+    length = Data->resultbuf->length;
+    ccn_content_get_value(ptr, length, Data->pcobuf, &ptr, &length);
+    // printf("%s\n", ptr);
+    
+    return ptr;
+    
 }
 
 
-struct SyncTestParms* SetParameter()
+struct ccn* GetHandle()
 {
-    struct SyncTestParms parmStore;
-    struct SyncTestParms *parms = &parmStore;
-    struct SyncBaseStruct *base = SyncNewBase(NULL, NULL, NULL);
-    
-    memset(parms, 0, sizeof(parmStore));
-    
-    parms->mode = 1;
-    parms->scope = 1;
-    parms->syncScope = 2;
-    parms->life = 4;
-    parms->bufs = 4;
-    parms->blockSize = 4096;
-    parms->base = base;
-    parms->resolve = 1;
-    
-
-    return parms;
+    struct ccn *ccn = NULL;
+    ccn = ccn_create();
+    if (ccn_connect(ccn, NULL) == -1) {
+        printf("could not connect to ccnd.\n");
+    }
+    return ccn;
 }
 
 int main(int argc, const char * argv[])
 {
-    // Write Slice to Repo
-    WriteSlice();
+    struct ccn *h = GetHandle();
     
-    // set sync parameters
-    struct SyncTestParms* parms = SetParameter();
+    // Write Slice to Repo
+    int res = WriteSlice(h, PREFIX, TOPO);
+    // printf("%d\n", res);
+    
+    WatchOverRepo(h, PREFIX, TOPO);
     
     // Write to repo
-    WriteToRepo(parms);
+    WriteToRepo(h, PREFIX, "9876543210123456789");
+    ccn_run(h, -1);
     
     // Read from repo
-    ReadFromRepo(parms);
+    // printf("%s", ReadFromRepo(PREFIX));
 }
 

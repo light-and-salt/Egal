@@ -2,15 +2,17 @@
 //  main.h
 //  test
 //
-//  Created by Zening Qu on 4/18/12.
+//  Created by Zening Qu on 4/23/12.
 //  Copyright (c) 2012 REMAP/UCLA. All rights reserved.
 //
 
 #ifndef test_main_h
 #define test_main_h
 
-void WriteSlice();
+int WriteSlice(struct ccn* h, char* p, char* t);
 
-void ExpressInterest();
+void WriteToRepo(struct ccn* ccn, char* dst, char* value);
+
+char* ReadFromRepo(char* dst);
 
 #endif

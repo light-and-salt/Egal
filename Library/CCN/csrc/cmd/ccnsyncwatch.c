@@ -69,6 +69,8 @@ sync_cb(struct ccns_handle *h,
         struct ccn_charbuf *rhash,
         struct ccn_charbuf *name)
 {
+    printf("sync_cb got called.\n");
+    
     char *hexL;
     char *hexR;
     struct ccn_charbuf *uri = ccn_charbuf_create();
@@ -85,6 +87,9 @@ sync_cb(struct ccns_handle *h,
     free(hexL);
     free(hexR);
     ccn_charbuf_destroy(&uri);
+    
+    ccn_set_run_timeout(h, 0);
+    
     return(0);
 }
 

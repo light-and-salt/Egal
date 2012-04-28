@@ -4,25 +4,15 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
-		<key>ccnsyncwatch.xcscheme</key>
+		<key>CCNxPlugin.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>3</integer>
-		</dict>
-		<key>test.xcscheme</key>
-		<dict>
-			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>2</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
-		<key>D19924B11548710100E2E787</key>
-		<dict>
-			<key>primary</key>
-			<true/>
-		</dict>
-		<key>D1D50EC7153E91D500F11B73</key>
+		<key>D197C2AA15461521008E1822</key>
 		<dict>
 			<key>primary</key>
 			<true/>
