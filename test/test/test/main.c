@@ -44,6 +44,7 @@
 #define MAX_READ_LEN 1000000
 #define DEFAULT_CMD_TIMEOUT 6000
 #define TIMEOUT 10
+#define INTEROP_BUFFER_SIZE 8192
 
 static char* TOPO = "/ndn/broadcast/cqs/game0/scene0";
 static char* PREFIX = "/ndn/ucla.edu/apps/cqs/game0/scene0";
@@ -90,7 +91,8 @@ sync_cb(struct ccns_handle *h,
         hexR = strdup("none");
     } else
         hexR = hex_string(rhash->buf, rhash->length);
-    printf("%s %s %s\n", ccn_charbuf_as_string(uri), hexL, hexR);
+    printf("%s\n", ccn_charbuf_as_string(uri));
+    ReadFromRepo(ccn_charbuf_as_string(uri));
     free(hexL);
     free(hexR);
     ccn_charbuf_destroy(&uri);
@@ -360,6 +362,32 @@ struct SyncTestParms* SetParameter()
     return parms;
 }
 
+static char InteropBF[INTEROP_BUFFER_SIZE];
+static int mutex = 0;
+// for the c code to put its message in buffer
+void PutToBuffer(char* name, char* content)
+{
+    while (mutex!=0);
+    
+    strcat(InteropBF, name);
+    strcat(InteropBF, ",");
+    strcat(InteropBF, content);
+    strcat(InteropBF, ",");
+    
+    printf("Interop Buffer: %s\n", InteropBF);
+}
+
+// for the C# code to poll and read from C
+char* ReadFromBuffer()
+{
+    char temp[INTEROP_BUFFER_SIZE];
+    strcpy(temp, InteropBF);
+    mutex = 1;
+    strcpy(InteropBF, "");
+    mutex = 0;
+    return temp;
+}
+
 static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                                     enum ccn_upcall_kind kind,
                                     struct ccn_upcall_info *info)
@@ -485,7 +513,7 @@ void WriteToRepo(struct ccn* ccn, char* dst, char* value)
     
     res = ccn_name_from_uri(nm, dst);
     if (res < 0) {
-        printf("ccn_name_from_uri failed");
+        printf("ccn_name_from_uri failed\n");
     }
     ccn_create_version(ccn, nm, CCN_V_NOW, 0, 0);
     
@@ -538,7 +566,16 @@ void WriteToRepo(struct ccn* ccn, char* dst, char* value)
     res = ccn_set_interest_filter(ccn, nm, action);
     ccn_charbuf_append_charbuf(cmd, nm);
     ccn_name_from_uri(cmd, "%C1.R.sw");
+    
+    // struct ccn_charbuf *uri = ccn_charbuf_create();
+    // ccn_uri_append(uri, cmd->buf, cmd->length, 1);
+    // printf("before nounce: %s\n", ccn_charbuf_as_string(uri));
+    
     ccn_name_append_nonce(cmd);
+    
+    // struct ccn_charbuf *u = ccn_charbuf_create();
+    // ccn_uri_append(u, cmd->buf, cmd->length, 1);
+    // printf("after nounce: %s\n", ccn_charbuf_as_string(u));   
     
     res = ccn_express_interest(ccn,
                          cmd,
@@ -547,6 +584,71 @@ void WriteToRepo(struct ccn* ccn, char* dst, char* value)
     
 }
 
+// return 0 for verified
+// return 1 for unverified
+static unsigned char rawbuf[8801];
+int VerifySig()
+{
+    int res;
+    ssize_t size;
+    struct ccn_parsed_ContentObject obj = {0};
+    struct ccn_parsed_ContentObject *co = &obj;
+    struct ccn_indexbuf *comps = ccn_indexbuf_create();
+    struct ccn_keystore *keystore;
+    char *home = getenv("HOME");
+    char *keystore_suffix = "/.ccnx/.ccnx_keystore";
+    char *keystore_name = NULL;
+
+    const void *verification_pubkey = NULL;
+    
+    if (home == NULL) {
+        printf("Unable to determine home directory for keystore\n");
+        exit(1);
+    }
+    keystore_name = calloc(1, strlen(home) + strlen(keystore_suffix) + 1);
+    
+    strcat(keystore_name, home);
+    strcat(keystore_name, keystore_suffix);
+    
+    keystore = ccn_keystore_create();
+    if (0 != ccn_keystore_init(keystore, keystore_name, "Th1s1sn0t8g00dp8ssw0rd.")) {
+        printf("Failed to initialize keystore\n");
+        exit(1);
+    }
+    verification_pubkey = ccn_keystore_public_key(keystore);
+
+//    size = strlen(rawbuf);
+    size = sizeof(rawbuf);
+    res = ccn_parse_ContentObject(rawbuf, size, co, comps);
+    if (res < 0) {
+        printf("not a ContentObject\n");
+    }
+    if (co->offset[CCN_PCO_B_KeyLocator] != co->offset[CCN_PCO_E_KeyLocator]) {
+        struct ccn_buf_decoder decoder;
+        struct ccn_buf_decoder *d =
+        ccn_buf_decoder_start(&decoder,
+                              rawbuf + co->offset[CCN_PCO_B_Key_Certificate_KeyName],
+                              co->offset[CCN_PCO_E_Key_Certificate_KeyName] - co->offset[CCN_PCO_B_Key_Certificate_KeyName]);
+        
+        printf("[has KeyLocator: ");
+        if (ccn_buf_match_dtag(d, CCN_DTAG_KeyName)) printf("KeyName] ");
+        if (ccn_buf_match_dtag(d, CCN_DTAG_Certificate)) printf("Certificate] ");
+        if (ccn_buf_match_dtag(d, CCN_DTAG_Key)) printf("Key] ");
+    }
+    
+    res = ccn_verify_signature(rawbuf, size, co, verification_pubkey);
+    
+    if (res != 1) {
+        printf("Signature failed to verify\n");
+        strcpy(rawbuf, "");
+        return -1;
+    } else {
+        printf("Verified\n");
+        strcpy(rawbuf, "");
+        return 0;
+    } 
+    
+}
 
 static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
                                          enum ccn_upcall_kind kind,
@@ -572,7 +674,23 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             if (sfd->pcobuf != NULL)
                 memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
             
+            // just for debug
+            unsigned char* ptr = NULL;
+            size_t length;
+            ptr = sfd->resultbuf->buf;
+            length = sfd->resultbuf->length;
+            ccn_content_get_value(ptr, length, sfd->pcobuf, &ptr, &length);
+            printf("%s\n", ptr);
             
+            
+            // verify signature 1
+            // strcpy(rawbuf, info->content_ccnb);
+            // int res = VerifySig();
+            // printf("*content_ccnb* Verify Sig returns %d\n", res);
+            // verify signature 2
+            // strcpy(rawbuf, info->pco);
+            // res = VerifySig();
+            // printf("*pco* Verify Sig returns %d\n", res);
             
             break;
         case CCN_UPCALL_CONTENT_BAD:
@@ -583,30 +701,31 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             break;
         case CCN_UPCALL_FINAL:
             printf("CCN_UPCALL_FINAL\n");
+        
             break;
         default:
             break;
     }
+    
     ccn_set_run_timeout(info->h, 0);
     return ret;
 }
 
-char* ReadFromRepo(char* dst)
+struct ccn* GetHandle();
+void ReadFromRepo(char* dst)
 {
     
+    struct ccn *ccn = GetHandle();
     
     int res = 0;
-    struct ccn *ccn = NULL;
-    ccn = ccn_create();
-    if (ccn_connect(ccn, NULL) == -1) {
-        printf("could not connect to ccnd.\n");
-    }
     
     struct ccn_charbuf *nm = ccn_charbuf_create();
 
     res = ccn_name_from_uri(nm, dst);
     if (res < 0) {
-        printf("ccn_name_from_uri failed");
+        printf("ccn_name_from_uri failed\n");
+        printf("while parsing name %s\n", dst);
+        printf("-- by ReadFromRepo\n");
     }
     
     
@@ -635,18 +754,24 @@ char* ReadFromRepo(char* dst)
                                template);
     ccn_run(ccn, -1);
     
-    
-    
-
-    // just for debug
     unsigned char* ptr = NULL;
     size_t length;
     ptr = Data->resultbuf->buf;
     length = Data->resultbuf->length;
     ccn_content_get_value(ptr, length, Data->pcobuf, &ptr, &length);
-    // printf("%s\n", ptr);
     
-    return ptr;
+    struct ccn_charbuf *uri = ccn_charbuf_create();
+    ccn_uri_append(uri, nm->buf, nm->length, 1);
+    printf("%s\n", ccn_charbuf_as_string(uri));
+    printf("%s\n", ptr);
+    
+    PutToBuffer(ccn_charbuf_as_string(uri), ptr);
+    
+    ReadFromBuffer();
+    printf("Test Interop Buffer: %s\n", InteropBF);
+    
+    ccn_destroy(&ccn);
+    return;
     
 }
 
@@ -670,12 +795,13 @@ int main(int argc, const char * argv[])
     // printf("%d\n", res);
     
     WatchOverRepo(h, PREFIX, TOPO);
-    
-    // Write to repo
-    WriteToRepo(h, PREFIX, "9876543210123456789");
     ccn_run(h, -1);
+
+    // Write to repo
+    // WriteToRepo(h, PREFIX, "9876543210123456789");
+    // ccn_run(h, 100);
     
     // Read from repo
-    // printf("%s", ReadFromRepo(PREFIX));
+    // printf("%s", ReadFromRepo(h, PREFIX));
 }
 

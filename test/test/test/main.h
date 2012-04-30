@@ -13,6 +13,6 @@ int WriteSlice(struct ccn* h, char* p, char* t);
 
 void WriteToRepo(struct ccn* ccn, char* dst, char* value);
 
-char* ReadFromRepo(char* dst);
+void ReadFromRepo(char* dst);
 
 #endif
