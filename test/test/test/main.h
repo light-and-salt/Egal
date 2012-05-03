@@ -11,8 +11,17 @@
 
 int WriteSlice(struct ccn* h, char* p, char* t);
 
-void WriteToRepo(struct ccn* ccn, char* dst, char* value);
+void WriteToRepo(char* dst, char* value);
 
 void ReadFromRepo(char* dst);
+
+// int ReadFromBuffer(struct bufnode* temp);
+
+struct ccn* GetHandle();
+
+int WatchOverRepo(struct ccn* h, char* p, char* t);
+
+char* Buffer(char mode, char* name, char* content);
+
 
 #endif

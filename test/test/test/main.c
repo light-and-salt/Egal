@@ -20,6 +20,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 
+
 #include <ccn/ccn.h>
 #include <ccn/sync.h>
 #include <ccn/uri.h>
@@ -70,7 +71,7 @@ int hex_value(char c)
     return (10+tolower(c) - 'a');
 }
 
-
+void PutToBuffer(char* name, char* content);
 int
 sync_cb(struct ccns_handle *h,
         struct ccn_charbuf *lhash,
@@ -78,6 +79,7 @@ sync_cb(struct ccns_handle *h,
         struct ccn_charbuf *name)
 {
     printf("sync_cb\n");
+    //PutToBuffer("sync_cb", "got called");
     
     char *hexL;
     char *hexR;
@@ -92,6 +94,9 @@ sync_cb(struct ccns_handle *h,
     } else
         hexR = hex_string(rhash->buf, rhash->length);
     printf("%s\n", ccn_charbuf_as_string(uri));
+    
+    //PutToBuffer("sync_cb is reading from repo", ccn_charbuf_as_string(uri));
+    
     ReadFromRepo(ccn_charbuf_as_string(uri));
     free(hexL);
     free(hexR);
@@ -362,30 +367,131 @@ struct SyncTestParms* SetParameter()
     return parms;
 }
 
+/*
+char* Buffer(char mode, char* name, char* content)
+{
+    static char InteropBF[INTEROP_BUFFER_SIZE];
+    static int mutex = 0;
+    
+    if (mode == 'w') {
+        while (mutex>0);
+        mutex++;
+        strcat(InteropBF, name);
+        strcat(InteropBF, ",");
+        strcat(InteropBF, content);
+        strcat(InteropBF, ",");
+        char temp[INTEROP_BUFFER_SIZE];
+        strcpy(temp, InteropBF);
+        mutex--;
+        return temp;
+    }
+    else if(mode == 'r')
+    {
+        char temp[INTEROP_BUFFER_SIZE];
+        while (mutex>0);
+        mutex++;
+        strcpy(temp, InteropBF);
+        strcpy(InteropBF, "");
+        mutex--;
+        return temp;
+    }
+}
+ 
+ */
+
+
 static char InteropBF[INTEROP_BUFFER_SIZE];
 static int mutex = 0;
+struct bufnode
+{
+    char* name;
+    char* content;
+    struct bufnode *next;
+};
+
+struct bufnode* bufhead = NULL;
+struct bufnode* buftail = NULL;
 // for the c code to put its message in buffer
 void PutToBuffer(char* name, char* content)
 {
-    while (mutex!=0);
+    struct bufnode *temp = malloc(sizeof(struct bufnode));
+    temp->name = malloc(256);
+    temp->content = malloc(256);
+    strcpy(temp->name,name);
+    strcpy(temp->content,content);
+    temp->next = NULL;
     
+    if (bufhead == NULL && buftail == NULL) {
+        bufhead = temp;
+        buftail = temp;
+    }
+    else if(bufhead != NULL && buftail != NULL){
+        buftail->next = temp;
+        buftail = temp;
+    }
+    else {
+        printf("Put to buffer error.\n");
+    }
+    
+    
+    /*
+    while (mutex>0);
+    mutex++;
     strcat(InteropBF, name);
     strcat(InteropBF, ",");
     strcat(InteropBF, content);
     strcat(InteropBF, ",");
-    
     printf("Interop Buffer: %s\n", InteropBF);
+    mutex--;
+     */
+    
 }
 
 // for the C# code to poll and read from C
-char* ReadFromBuffer()
+int ReadFromBuffer(struct bufnode* temp)
 {
-    char temp[INTEROP_BUFFER_SIZE];
-    strcpy(temp, InteropBF);
-    mutex = 1;
+    if (bufhead != NULL && buftail != NULL) {
+        temp->name = bufhead->name;
+        temp->content = bufhead->content;
+        temp->next = NULL;
+        if (bufhead == buftail) {
+            bufhead = NULL;
+            buftail = NULL;
+        }
+        else {
+            bufhead = bufhead->next;
+        }
+        
+        return 0;
+    }
+    else if(bufhead == NULL && buftail == NULL)
+    {
+        return 1;
+    }
+    else {
+        return -1;
+    }
+    
+    /*
+    while (mutex>0);
+    mutex++;
+    strcpy(*temp, InteropBF);
+    // memcpy(temp, InteropBF, INTEROP_BUFFER_SIZE);
     strcpy(InteropBF, "");
-    mutex = 0;
+    mutex--;
     return temp;
+     */
+}
+
+int testbuffer(int time)
+{
+    while (1) {
+        char* name = "sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%Fsync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,";
+        char* content = "ABCDEFGsync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,";
+        PutToBuffer(name, content);
+        sleep(time);
+    }
+    return 0;
 }
 
 static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
@@ -482,7 +588,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                 ccn_charbuf_destroy(&name);
                 ccn_charbuf_destroy(&cb);
                 ccn_charbuf_destroy(&cob);
-                
+                ccn_set_run_timeout(h, 0);
             }
             ccn_charbuf_destroy(&uri);
                         
@@ -493,12 +599,14 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
             printf("CCN_UPCALL_RESULT_ERR\n");
             break;
     }
+    
     return ret;
 
 }
 
-void WriteToRepo(struct ccn* ccn, char* dst, char* value)
+void WriteToRepo(char* dst, char* value)
 {
+    struct ccn* ccn = GetHandle();
     // set sync parameters
     struct SyncTestParms* parms = SetParameter();
     
@@ -581,6 +689,7 @@ void WriteToRepo(struct ccn* ccn, char* dst, char* value)
                          cmd,
                          action,
                          template);
+    ccn_run(ccn, -1);
     
 }
 
@@ -766,9 +875,9 @@ void ReadFromRepo(char* dst)
     printf("%s\n", ptr);
     
     PutToBuffer(ccn_charbuf_as_string(uri), ptr);
+        
+    // printf("Interop Buffer: %s\n", ReadFromBuffer());
     
-    ReadFromBuffer();
-    printf("Test Interop Buffer: %s\n", InteropBF);
     
     ccn_destroy(&ccn);
     return;
@@ -795,12 +904,13 @@ int main(int argc, const char * argv[])
     // printf("%d\n", res);
     
     WatchOverRepo(h, PREFIX, TOPO);
-    ccn_run(h, -1);
+    
 
     // Write to repo
-    // WriteToRepo(h, PREFIX, "9876543210123456789");
+   // WriteToRepo(h, PREFIX, "2,34,21,22");
     // ccn_run(h, 100);
     
+    ccn_run(h, -1);
     // Read from repo
     // printf("%s", ReadFromRepo(h, PREFIX));
 }
