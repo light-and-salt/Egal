@@ -431,29 +431,17 @@ void PutToBuffer(char* name, char* content)
     }
     else {
         printf("Put to buffer error.\n");
-    }
-    
-    
-    /*
-    while (mutex>0);
-    mutex++;
-    strcat(InteropBF, name);
-    strcat(InteropBF, ",");
-    strcat(InteropBF, content);
-    strcat(InteropBF, ",");
-    printf("Interop Buffer: %s\n", InteropBF);
-    mutex--;
-     */
-    
+    }    
 }
 
 // for the C# code to poll and read from C
-int ReadFromBuffer(struct bufnode* temp)
+struct bufnode* ReadFromBuffer()
 {
     if (bufhead != NULL && buftail != NULL) {
-        temp->name = bufhead->name;
-        temp->content = bufhead->content;
-        temp->next = NULL;
+        // temp->name = bufhead->name;
+        // temp->content = bufhead->content;
+        // temp->next = NULL;
+        struct bufnode* temp = bufhead;
         if (bufhead == buftail) {
             bufhead = NULL;
             buftail = NULL;
@@ -462,25 +450,15 @@ int ReadFromBuffer(struct bufnode* temp)
             bufhead = bufhead->next;
         }
         
-        return 0;
+        return temp;
     }
     else if(bufhead == NULL && buftail == NULL)
     {
-        return 1;
+        return NULL;
     }
     else {
-        return -1;
+        return NULL;
     }
-    
-    /*
-    while (mutex>0);
-    mutex++;
-    strcpy(*temp, InteropBF);
-    // memcpy(temp, InteropBF, INTEROP_BUFFER_SIZE);
-    strcpy(InteropBF, "");
-    mutex--;
-    return temp;
-     */
 }
 
 int testbuffer(int time)
