@@ -47,8 +47,8 @@
 #define TIMEOUT 10
 #define INTEROP_BUFFER_SIZE 8192
 
-static char* TOPO = "/ndn/broadcast/cqs/game0/scene0";
-static char* PREFIX = "/ndn/ucla.edu/apps/cqs/game0/scene0";
+static char* TOPO = "ccnx:/ndn/broadcast/cqs/game0/scene0";
+static char* PREFIX = "ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0";
 
 char *
 hex_string(unsigned char *s, size_t l)
@@ -306,6 +306,26 @@ struct ContentStruct {
     struct ccn_charbuf *template;
 };
 
+struct StateStruct {
+    struct SyncTestParms *parms;
+    struct ccn_charbuf *nm;
+    struct ccn_charbuf *cb;
+    struct ccn *ccn;
+    off_t bs;
+    off_t fSize;
+    FILE *file;
+    //
+    struct ccn_charbuf * resultbuf;
+    struct ccn_parsed_ContentObject *pcobuf;
+    struct ccn_indexbuf *compsbuf;
+    char* value;
+    int valuesize;
+    //
+    unsigned char *segData;
+    int nSegs;
+    int stored;
+    struct ccn_charbuf *template;
+};
 
 static int64_t
 segFromInfo(struct ccn_upcall_info *info) {
@@ -366,38 +386,6 @@ struct SyncTestParms* SetParameter()
     
     return parms;
 }
-
-/*
-char* Buffer(char mode, char* name, char* content)
-{
-    static char InteropBF[INTEROP_BUFFER_SIZE];
-    static int mutex = 0;
-    
-    if (mode == 'w') {
-        while (mutex>0);
-        mutex++;
-        strcat(InteropBF, name);
-        strcat(InteropBF, ",");
-        strcat(InteropBF, content);
-        strcat(InteropBF, ",");
-        char temp[INTEROP_BUFFER_SIZE];
-        strcpy(temp, InteropBF);
-        mutex--;
-        return temp;
-    }
-    else if(mode == 'r')
-    {
-        char temp[INTEROP_BUFFER_SIZE];
-        while (mutex>0);
-        mutex++;
-        strcpy(temp, InteropBF);
-        strcpy(InteropBF, "");
-        mutex--;
-        return temp;
-    }
-}
- 
- */
 
 
 static char InteropBF[INTEROP_BUFFER_SIZE];
@@ -464,8 +452,8 @@ struct bufnode* ReadFromBuffer()
 int testbuffer(int time)
 {
     while (1) {
-        char* name = "sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%Fsync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,";
-        char* content = "ABCDEFGsync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,sync_cb,got called,sync_cb is reading from repo,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0/0/-401085/%FD%04%F9%FA%B9%ED%D9/%00/%28%19%EC%B1d%2A%B7%AFGa%E6%1CF%C2i3%C7I%CDJ.o%A2%83%A5%8Eu%1B%A4%D6h%E5,";
+        char* name = "";
+        char* content = "";
         PutToBuffer(name, content);
         sleep(time);
     }
@@ -822,8 +810,6 @@ void ReadFromRepo(char* dst)
     Data->pcobuf = &pcos;
     Data->compsbuf = NULL;
     
-    
-    
     struct ccn_charbuf *template = SyncGenInterest(NULL,
                                                    1,
                                                    4,
@@ -863,6 +849,378 @@ void ReadFromRepo(char* dst)
 }
 
 
+static enum ccn_upcall_res AskCallBack(struct ccn_closure *selfp,
+                                        enum ccn_upcall_kind kind,
+                                        struct ccn_upcall_info *info)
+{
+    printf("Ask Call back\n");
+    struct StateStruct *sfd = selfp->data;
+    enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
+    
+    switch (kind) {
+        case CCN_UPCALL_CONTENT:
+            printf("CCN_UPCALL_CONTENT\n");
+            // printf("%s\n", info->content_ccnb);
+            
+            
+            if (sfd->resultbuf != NULL) {
+                sfd->resultbuf->length = 0;
+                ccn_charbuf_append(sfd->resultbuf,
+                                   info->content_ccnb, info->pco->offset[CCN_PCO_E]);
+            }
+            if (sfd->pcobuf != NULL)
+                memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
+            
+            
+            //struct ccn_parsed_ContentObject obj = {0};
+            //struct ccn_parsed_ContentObject *co = &obj;
+            //struct ccn_indexbuf *comps = ccn_indexbuf_create();
+            //int res = ccn_parse_ContentObject(sfd->resultbuf->buf, sfd->resultbuf->length, co, comps);
+            //printf("parse content object result: %d\n", res);
+            
+            /*            
+            if(0)
+            {
+                
+                if (co->offset[CCN_PCO_B_Timestamp] != co->offset[CCN_PCO_E_Timestamp]) {
+                    printf("There is a timestamp.\n");
+                    printf("%d, %d\n", co->offset[CCN_PCO_B_Timestamp], co->offset[CCN_PCO_E_Timestamp]);
+                    
+                    struct ccn_buf_decoder decoder;
+                    struct ccn_buf_decoder *d = ccn_buf_decoder_start(&decoder, 
+                                                                      sfd->resultbuf->buf + co->offset[CCN_PCO_B_Timestamp],
+                                                                      co->offset[CCN_PCO_E_Timestamp] - co->offset[CCN_PCO_B_Timestamp]);
+                    printf("TimeStamp: %s\n", d->buf);
+                    
+                 
+                    if(0)
+                    {
+                        struct ccn_buf_decoder decoder;
+                        struct ccn_buf_decoder *d =
+                        ccn_buf_decoder_start(&decoder,
+                                              rawbuf + co->offset[CCN_PCO_B_Key_Certificate_KeyName],
+                                              co->offset[CCN_PCO_E_Key_Certificate_KeyName] - co->offset[CCN_PCO_B_Key_Certificate_KeyName]);
+                        
+                        fprintf(stderr, "[has KeyLocator: ");
+                        if (ccn_buf_match_dtag(d, CCN_DTAG_KeyName)) fprintf(stderr, "KeyName] ");
+                        if (ccn_buf_match_dtag(d, CCN_DTAG_Certificate)) fprintf(stderr, "Certificate] ");
+                        if (ccn_buf_match_dtag(d, CCN_DTAG_Key)) fprintf(stderr, "Key] ");
+                        
+
+                    }
+                }
+                else {
+                    printf("There is not any timestamp.\n");
+                }
+            }
+            */
+            
+            
+            // just for debug
+            unsigned char* ptr = NULL;
+            size_t length;
+            ptr = sfd->resultbuf->buf;
+            length = sfd->resultbuf->length;
+            //ccn_content_get_value(ptr, length, sfd->pcobuf, &ptr, &length);
+            //printf("%s\n", ptr);
+            
+            unsigned char* timestamp = malloc(11);
+            size_t l = 11;
+            int res = ccn_ref_tagged_BLOB(CCN_DTAG_Timestamp, 
+                                ptr, 
+                                sfd->pcobuf->offset[CCN_PCO_B_Timestamp], 
+                                sfd->pcobuf->offset[CCN_PCO_E_Timestamp],
+                                &timestamp, 
+                                &l);
+            printf("%d, %d, %d\n", res, sfd->pcobuf->offset[CCN_PCO_B_Timestamp], 
+                   sfd->pcobuf->offset[CCN_PCO_E_Timestamp]);
+            /*
+            ccn_ref_tagged_BLOB(CCN_DTAG_Content, 
+                                ptr, 
+                                sfd->pcobuf->offset[CCN_PCO_B_Content], 
+                                sfd->pcobuf->offset[CCN_PCO_E_Content],
+                                &ptr, 
+                                &length);
+             */
+            printf("%s\n", timestamp);
+             
+            
+            break;
+        case CCN_UPCALL_CONTENT_BAD:
+            printf("CCN_UPCALL_CONTENT_BAD\n");
+            break;
+        case CCN_UPCALL_INTEREST_TIMED_OUT:
+            printf("CCN_UPCALL_INTEREST_TIMED_OUT\n");
+            break;
+        case CCN_UPCALL_FINAL:
+            printf("CCN_UPCALL_FINAL\n");
+            free(selfp);
+            break;
+        default:
+            break;
+    }
+    
+    // ccn_set_run_timeout(info->h, 0);
+    
+    return ret;
+}
+
+int last_time = 0;
+int max_time = 0;
+struct ccn_charbuf* GenMyTemplate(struct ccn* h)
+{
+    int ans;
+    struct ccn_charbuf *templ = NULL;
+    int i;
+    // struct ccn_traversal *data = get_my_data(selfp);
+    
+    templ = ccn_charbuf_create();
+    ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
+    ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+    ccn_charbuf_append_closer(templ); /* </Name> */
+    
+    if(0)
+    {
+        ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
+        
+        // EXCLUDE_LOW
+        ccn_charbuf_append_tt(templ, CCN_DTAG_Any, CCN_DTAG);
+        ccn_charbuf_append_closer(templ);
+        
+        // First Timestamp
+        // ccn_create_version(h, templ, CCN_V_REPLACE, 0, 0*1000);
+        ccn_charbuf_append_tt(templ, CCN_DTAG_Component, CCN_DTAG);
+        ccnb_append_timestamp_blob(templ, CCN_MARKER_VERSION, last_time, last_time*1000000000);
+        ccn_charbuf_append_closer(templ); /* </Component> */
+        // last_time shall be updated by AskCallBack()! Nooooo!
+        // By parsing content object! Nooooo!
+        
+
+        // Second Timestamp
+        // ccn_create_version(h, templ, CCN_V_NESTOK, 1, 1*1000000000);
+        ccn_charbuf_append_tt(templ, CCN_DTAG_Component, CCN_DTAG);
+        ccnb_append_timestamp_blob(templ, CCN_MARKER_VERSION, max_time, max_time*1000000000);
+        ccn_charbuf_append_closer(templ);
+        // and what is max_time? the end of time? ... &&& ~~~ @@@ *** %%% ### !!!
+
+        // EXCLUDE_HIGH
+        ccn_charbuf_append_tt(templ, CCN_DTAG_Any, CCN_DTAG);
+        ccn_charbuf_append_closer(templ);
+        
+        ccn_charbuf_append_closer(templ); /* </Exclude> */
+    }
+
+    ccnb_tagged_putf(templ, CCN_DTAG_ChildSelector, "%d", 1);
+
+    ccnb_tagged_putf(templ, CCN_DTAG_Scope, "%d", 2);
+    
+    ccn_charbuf_append_closer(templ); /* </Interest> */
+    return templ;
+}
+
+void AskForState(char* name, int timeout)
+{
+    struct ccn* ccn = GetHandle();
+    
+    // set sync parameters
+    struct SyncTestParms* parms = SetParameter();
+        
+    int res = 0;
+    
+    struct ccn_charbuf *nm = ccn_charbuf_create();
+        
+    // for this function, dst should be like
+    // ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/objID/state
+    res = ccn_name_from_uri(nm, name);
+    if (res < 0) {
+        printf("ccn_name_from_uri failed\n");
+    }
+    
+    // Create Version will be used, but not here
+    //ccn_create_version(ccn, nm, CCN_V_NOW, 0, 0);
+    
+    struct StateStruct *State = NEW_STRUCT(1, StateStruct);
+    State->nm = nm;
+    State->ccn = ccn;
+    State->resultbuf = ccn_charbuf_create();
+    
+    struct ccn_parsed_ContentObject pcobuf = {0};
+    State->pcobuf = &pcobuf;
+    
+    /*
+    struct ccn_charbuf *template = SyncGenInterest(NULL,
+                                                   2,
+                                                   4,
+                                                   -1, 1, NULL);
+    
+    */
+    struct ccn_charbuf *template = GenMyTemplate(ccn);
+    
+    struct ccn_closure *action = NEW_STRUCT(1, ccn_closure);
+    action->p = AskCallBack;
+    
+    action->data = State;
+    
+    
+    res = ccn_express_interest(ccn,
+                               nm,
+                               action,
+                               template);
+    ccn_run(ccn, timeout);
+    ccn_destroy(&ccn);
+    
+}
+
+
+struct StateBuffer
+{
+    char* state;
+    int statelens;
+};
+
+static struct StateBuffer* PtrToStateBuffer = NULL;
+int WriteToStateBuffer(char* state, int statelens)
+{
+    // this is for C# to write to the State Buffer
+    if (PtrToStateBuffer == NULL) {
+        PtrToStateBuffer = malloc(sizeof(struct StateBuffer));
+        PtrToStateBuffer->state = malloc(statelens);
+        PtrToStateBuffer->statelens = malloc(sizeof(int));
+        PtrToStateBuffer->statelens = statelens;
+            }
+    strcpy(PtrToStateBuffer->state, state);
+}
+
+char* ReadStateBuffer()
+{
+    return PtrToStateBuffer->state;
+}
+
+int ReadStateLens()
+{
+    return PtrToStateBuffer->statelens;
+}
+
+static enum ccn_upcall_res PublishState(struct ccn_closure *selfp,
+                                        enum ccn_upcall_kind kind,
+                                        struct ccn_upcall_info *info)
+{
+    printf("Publishing state...\n");
+    struct ccn *h = info->h;
+    
+    struct StateStruct *sfd = selfp->data;
+    enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
+    switch (kind) {
+        case CCN_UPCALL_FINAL:
+            printf("CCN_UPCALL_FINAL\n");
+            // free(selfp);
+            
+            break;
+        case CCN_UPCALL_INTEREST: {
+            printf("CCN_UPCALL_INTEREST\n");
+            
+            struct ccn_charbuf *uri = ccn_charbuf_create();
+            ccn_uri_append(uri, sfd->nm->buf, sfd->nm->length, 0);
+            char *str = ccn_charbuf_as_string(uri);
+            ret = CCN_UPCALL_RESULT_INTEREST_CONSUMED; // maybe not like this
+            
+            
+            struct ccn_charbuf *name = SyncCopyName(sfd->nm); // need to do sth to the name 
+            ccn_create_version(h, name, CCN_V_NOW, 0, 0); // very good, haha -- CQ
+            
+            struct ccn_charbuf *cb = ccn_charbuf_create(); // cb is content buffer
+            struct ccn_charbuf *cob = ccn_charbuf_create();
+            
+            int rs = ReadStateLens();
+            ccn_charbuf_reserve(cb, rs);
+            cb->length = rs;
+            char *ptr = ccn_charbuf_as_string(cb);
+            
+            if (PtrToStateBuffer == NULL) {
+                return -1;
+            }                    
+            strcpy(ptr, PtrToStateBuffer->state);
+            
+            // start signing ...
+            struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
+            const void *cp = NULL;
+            size_t cs = 0;
+            sp.type = CCN_CONTENT_DATA;
+            cp = (const void *) cb->buf;
+            cs = cb->length;
+            
+            // I think I am going to need a different template
+            // since timestamp is in the template
+            sp.template_ccnb = SyncGenInterest(NULL,
+                                               2,
+                                               4,
+                                               -1, -1, NULL);
+
+            
+            sp.sp_flags |= CCN_SP_FINAL_BLOCK;
+            ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, 0);
+            ccn_sign_content(sfd->ccn,
+                             cob,
+                             name,
+                             &sp,
+                             cp,
+                             rs);
+            // is hash required?
+            // not sure... just leave it here
+            
+            if (1) {
+                // not sure if this generates the right hash
+                struct ccn_parsed_ContentObject pcos;
+                ccn_parse_ContentObject(cob->buf, cob->length,
+                                        &pcos, NULL);
+                ccn_digest_ContentObject(cob->buf, &pcos);
+                if (pcos.digest_bytes > 0)
+                    ccn_name_append(name, pcos.digest, pcos.digest_bytes);
+            }
+            
+            
+            ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
+            
+            
+            ccn_charbuf_destroy(&name);
+            ccn_charbuf_destroy(&cb);
+            ccn_charbuf_destroy(&cob);
+            ccn_charbuf_destroy(&uri);
+            
+            break;
+        }
+        default:
+            ret = CCN_UPCALL_RESULT_ERR;
+            printf("CCN_UPCALL_RESULT_ERR\n");
+            break;
+    }
+    
+    return ret;
+    
+}
+
+void RegisterInterestFilter(struct ccn* ccn, char* name)
+{
+    int res = 0;
+    struct ccn_charbuf *nm = ccn_charbuf_create();
+    res = ccn_name_from_uri(nm, name);
+    if (res < 0) {
+        printf("ccn_name_from_uri failed\n");
+    }
+    // ccn_create_version(ccn, nm, CCN_V_NOW, 0, 0);
+    
+    
+    struct StateStruct *State = NEW_STRUCT(1, StateStruct);
+    State->ccn = ccn;
+    State->nm = nm;
+
+    struct ccn_closure *action = NEW_STRUCT(1, ccn_closure);
+    action->p = PublishState;
+    action->data = State;
+
+    ccn_set_interest_filter(ccn, nm, action);
+}
+
 struct ccn* GetHandle()
 {
     struct ccn *ccn = NULL;
@@ -873,22 +1231,36 @@ struct ccn* GetHandle()
     return ccn;
 }
 
+
 int main(int argc, const char * argv[])
 {
     struct ccn *h = GetHandle();
     
     // Write Slice to Repo
-    int res = WriteSlice(h, PREFIX, TOPO);
+    // int res = WriteSlice(h, PREFIX, TOPO);
     // printf("%d\n", res);
     
-    WatchOverRepo(h, PREFIX, TOPO);
+    // WatchOverRepo(h, PREFIX, TOPO);
     
 
     // Write to repo
-   // WriteToRepo(h, PREFIX, "2,34,21,22");
+    // WriteToRepo(h, PREFIX, "2,34,21,22");
     // ccn_run(h, 100);
     
-    ccn_run(h, -1);
+    // this shall be called from C#
+    // here is just for debug
+    WriteToStateBuffer("zening", 10);
+    
+    char* other = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/lioncub/state";
+    char* me = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/zening/state";
+    // RegisterInterestFilter(h, me);
+    
+    while (1) {
+        AskForState(other, 1000);
+        // ccn_run(h, 1000);
+    }  
+            
+    
     // Read from repo
     // printf("%s", ReadFromRepo(h, PREFIX));
 }
