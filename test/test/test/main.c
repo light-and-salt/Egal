@@ -849,6 +849,66 @@ void ReadFromRepo(char* dst)
 }
 
 
+static intmax_t last_time = -1;
+static intmax_t max_time = 68719476736; // this is (2^48-1)/4096
+static struct ccn_charbuf * last_name = NULL;
+static struct ccn_charbuf * max_name = NULL;
+
+// reads byte array (big endian) and length
+// returns time stamp in seconds
+intmax_t GetTimeStamp(unsigned char* data, size_t length)
+{
+    if(length!=6)
+    {
+        return -1;
+    }
+    
+    int i = 0;
+    intmax_t result = ((uint64_t)data[0] << 40) |
+    ((uint64_t)data[1] << 32) |
+    ((uint64_t)data[2] << 24) |
+    ((uint64_t)data[3] << 16) |
+    ((uint64_t)data[4] << 8)  |
+    ((uint64_t)data[5] << 0);
+    intmax_t time = result/4096;
+    
+    
+    // printf("%d\n", time);
+    return time;
+    
+}
+
+int UpdateFencePoints(intmax_t last_time, struct ccn_upcall_info *info )
+{
+    struct ccn_indexbuf *comps;
+    int matched_comps = 0;
+    const unsigned char *ccnb = NULL;
+    size_t ccnb_size = 0;
+    struct ccn_charbuf * comp = NULL;
+    
+    ccnb = info->content_ccnb;
+    ccnb_size = info->pco->offset[CCN_PCO_E];
+    comps = info->content_comps;
+    matched_comps = info->pi->prefix_comps;
+    
+    // last timestamp
+    comp = ccn_charbuf_create();
+    ccn_name_init(comp);
+    if (matched_comps + 1 == comps->n) {
+        /* Reconstruct the implicit content digest component */
+        ccn_digest_ContentObject(ccnb, info->pco);
+        ccn_name_append(comp, info->pco->digest, info->pco->digest_bytes);
+    }
+    else {
+        ccn_name_append_components(comp, ccnb,
+                                   comps->buf[matched_comps],
+                                   comps->buf[matched_comps + 1]);
+    }
+    last_name = comp;
+    
+    // max timestamp
+}
+
 static enum ccn_upcall_res AskCallBack(struct ccn_closure *selfp,
                                         enum ccn_upcall_kind kind,
                                         struct ccn_upcall_info *info)
@@ -872,68 +932,14 @@ static enum ccn_upcall_res AskCallBack(struct ccn_closure *selfp,
                 memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
             
             
-            //struct ccn_parsed_ContentObject obj = {0};
-            //struct ccn_parsed_ContentObject *co = &obj;
-            //struct ccn_indexbuf *comps = ccn_indexbuf_create();
-            //int res = ccn_parse_ContentObject(sfd->resultbuf->buf, sfd->resultbuf->length, co, comps);
-            //printf("parse content object result: %d\n", res);
-            
-            /*            
-            if(0)
-            {
-                
-                if (co->offset[CCN_PCO_B_Timestamp] != co->offset[CCN_PCO_E_Timestamp]) {
-                    printf("There is a timestamp.\n");
-                    printf("%d, %d\n", co->offset[CCN_PCO_B_Timestamp], co->offset[CCN_PCO_E_Timestamp]);
-                    
-                    struct ccn_buf_decoder decoder;
-                    struct ccn_buf_decoder *d = ccn_buf_decoder_start(&decoder, 
-                                                                      sfd->resultbuf->buf + co->offset[CCN_PCO_B_Timestamp],
-                                                                      co->offset[CCN_PCO_E_Timestamp] - co->offset[CCN_PCO_B_Timestamp]);
-                    printf("TimeStamp: %s\n", d->buf);
-                    
-                 
-                    if(0)
-                    {
-                        struct ccn_buf_decoder decoder;
-                        struct ccn_buf_decoder *d =
-                        ccn_buf_decoder_start(&decoder,
-                                              rawbuf + co->offset[CCN_PCO_B_Key_Certificate_KeyName],
-                                              co->offset[CCN_PCO_E_Key_Certificate_KeyName] - co->offset[CCN_PCO_B_Key_Certificate_KeyName]);
-                        
-                        fprintf(stderr, "[has KeyLocator: ");
-                        if (ccn_buf_match_dtag(d, CCN_DTAG_KeyName)) fprintf(stderr, "KeyName] ");
-                        if (ccn_buf_match_dtag(d, CCN_DTAG_Certificate)) fprintf(stderr, "Certificate] ");
-                        if (ccn_buf_match_dtag(d, CCN_DTAG_Key)) fprintf(stderr, "Key] ");
-                        
-
-                    }
-                }
-                else {
-                    printf("There is not any timestamp.\n");
-                }
-            }
-            */
-            
             
             // just for debug
             unsigned char* ptr = NULL;
             size_t length;
             ptr = sfd->resultbuf->buf;
             length = sfd->resultbuf->length;
-            //ccn_content_get_value(ptr, length, sfd->pcobuf, &ptr, &length);
-            //printf("%s\n", ptr);
+            ccn_content_get_value(ptr, length, sfd->pcobuf, &ptr, &length);
             
-            unsigned char* timestamp = malloc(11);
-            size_t l = 11;
-            int res = ccn_ref_tagged_BLOB(CCN_DTAG_Timestamp, 
-                                ptr, 
-                                sfd->pcobuf->offset[CCN_PCO_B_Timestamp], 
-                                sfd->pcobuf->offset[CCN_PCO_E_Timestamp],
-                                &timestamp, 
-                                &l);
-            printf("%d, %d, %d\n", res, sfd->pcobuf->offset[CCN_PCO_B_Timestamp], 
-                   sfd->pcobuf->offset[CCN_PCO_E_Timestamp]);
             /*
             ccn_ref_tagged_BLOB(CCN_DTAG_Content, 
                                 ptr, 
@@ -942,8 +948,24 @@ static enum ccn_upcall_res AskCallBack(struct ccn_closure *selfp,
                                 &ptr, 
                                 &length);
              */
-            printf("%s\n", timestamp);
-             
+            
+            size_t begin = info->pco->offset[CCN_PCO_B_Timestamp];
+            size_t end = info->pco->offset[CCN_PCO_E_Timestamp];
+            
+            size_t timelength = end - begin + 1;
+            unsigned char* timestamp = malloc(timelength);
+
+            ccn_ref_tagged_BLOB(CCN_DTAG_Timestamp, 
+                                info->content_ccnb, 
+                                begin,
+                                end,
+                                &timestamp, 
+                                &timelength);
+
+            intmax_t ts = GetTimeStamp(timestamp, timelength);
+            
+            UpdateFencePoints(ts, info);
+            printf("%s <%d>\n", ptr, ts);
             
             break;
         case CCN_UPCALL_CONTENT_BAD:
@@ -965,8 +987,7 @@ static enum ccn_upcall_res AskCallBack(struct ccn_closure *selfp,
     return ret;
 }
 
-int last_time = 0;
-int max_time = 0;
+
 struct ccn_charbuf* GenMyTemplate(struct ccn* h)
 {
     int ans;
@@ -979,8 +1000,10 @@ struct ccn_charbuf* GenMyTemplate(struct ccn* h)
     ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
     ccn_charbuf_append_closer(templ); /* </Name> */
     
-    if(0)
+    if(last_name!=NULL)
     {
+        printf("Generating new fence points.\n");
+        
         ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
         
         // EXCLUDE_LOW
@@ -989,24 +1012,24 @@ struct ccn_charbuf* GenMyTemplate(struct ccn* h)
         
         // First Timestamp
         // ccn_create_version(h, templ, CCN_V_REPLACE, 0, 0*1000);
-        ccn_charbuf_append_tt(templ, CCN_DTAG_Component, CCN_DTAG);
-        ccnb_append_timestamp_blob(templ, CCN_MARKER_VERSION, last_time, last_time*1000000000);
-        ccn_charbuf_append_closer(templ); /* </Component> */
-        // last_time shall be updated by AskCallBack()! Nooooo!
-        // By parsing content object! Nooooo!
+        // ccn_charbuf_append_tt(templ, CCN_DTAG_Component, CCN_DTAG);
+        // ccnb_append_timestamp_blob(templ, CCN_MARKER_VERSION, last_time, last_time*1000000000);
+        // ccn_charbuf_append_closer(templ); /* </Component> */
+        ccn_charbuf_append(templ, last_name->buf + 1, last_name->length - 2);
         
-
+        /*
         // Second Timestamp
         // ccn_create_version(h, templ, CCN_V_NESTOK, 1, 1*1000000000);
         ccn_charbuf_append_tt(templ, CCN_DTAG_Component, CCN_DTAG);
         ccnb_append_timestamp_blob(templ, CCN_MARKER_VERSION, max_time, max_time*1000000000);
         ccn_charbuf_append_closer(templ);
         // and what is max_time? the end of time? ... &&& ~~~ @@@ *** %%% ### !!!
-
+        
         // EXCLUDE_HIGH
         ccn_charbuf_append_tt(templ, CCN_DTAG_Any, CCN_DTAG);
         ccn_charbuf_append_closer(templ);
-        
+        */
+                
         ccn_charbuf_append_closer(templ); /* </Exclude> */
     }
 
@@ -1047,13 +1070,6 @@ void AskForState(char* name, int timeout)
     struct ccn_parsed_ContentObject pcobuf = {0};
     State->pcobuf = &pcobuf;
     
-    /*
-    struct ccn_charbuf *template = SyncGenInterest(NULL,
-                                                   2,
-                                                   4,
-                                                   -1, 1, NULL);
-    
-    */
     struct ccn_charbuf *template = GenMyTemplate(ccn);
     
     struct ccn_closure *action = NEW_STRUCT(1, ccn_closure);
@@ -1253,11 +1269,11 @@ int main(int argc, const char * argv[])
     
     char* other = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/lioncub/state";
     char* me = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/zening/state";
-    // RegisterInterestFilter(h, me);
+    RegisterInterestFilter(h, me);
     
     while (1) {
-        AskForState(other, 1000);
-        // ccn_run(h, 1000);
+        AskForState(me, 1000);
+        ccn_run(h, 1000);
     }  
             
     
