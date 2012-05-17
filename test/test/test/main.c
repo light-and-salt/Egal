@@ -1344,10 +1344,10 @@ int main(int argc, const char * argv[])
     RegisterInterestFilter(h, me);
     
     while (1) {
-        //struct ccn *hh = GetHandle();
-        AskForState(h, me, 1000);
+        struct ccn *hh = GetHandle();
+        AskForState(hh, other, 1000);
         ccn_run(h, 1000);
-        //ccn_run(hh, 1000);
+        ccn_run(hh, 1000);
 
     }
     
