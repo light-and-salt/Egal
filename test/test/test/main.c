@@ -73,14 +73,13 @@ int hex_value(char c)
 
 void PutToBuffer(char* name, char* content);
 int
-sync_cb(struct ccns_handle *h,
+WatchCallBack(struct ccns_handle *h,
         struct ccn_charbuf *lhash,
         struct ccn_charbuf *rhash,
         struct ccn_charbuf *name)
 {
-    printf("sync_cb\n");
-    //PutToBuffer("sync_cb", "got called");
-    
+    printf("Watch Call Back\n");
+        
     char *hexL;
     char *hexR;
     struct ccn_charbuf *uri = ccn_charbuf_create();
@@ -95,9 +94,9 @@ sync_cb(struct ccns_handle *h,
         hexR = hex_string(rhash->buf, rhash->length);
     printf("%s\n", ccn_charbuf_as_string(uri));
     
-    //PutToBuffer("sync_cb is reading from repo", ccn_charbuf_as_string(uri));
-    
+        
     ReadFromRepo(ccn_charbuf_as_string(uri));
+    
     free(hexL);
     free(hexR);
     ccn_charbuf_destroy(&uri);
@@ -229,7 +228,7 @@ int WatchOverRepo(struct ccn* h, char* p, char* t)
     slice = ccns_slice_create();
     ccns_slice_set_topo_prefix(slice, topo, prefix);
     
-    ccns = ccns_open(h, slice, &sync_cb, roothash, NULL);
+    ccns = ccns_open(h, slice, &WatchCallBack, roothash, NULL);
     
     // ccns_close(&ccns, NULL, NULL);
     
@@ -767,23 +766,24 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             // strcpy(rawbuf, info->pco);
             // res = VerifySig();
             // printf("*pco* Verify Sig returns %d\n", res);
-            
+            ccn_set_run_timeout(info->h, 0);
+
             break;
         case CCN_UPCALL_CONTENT_BAD:
             printf("CCN_UPCALL_CONTENT_BAD\n");
             break;
         case CCN_UPCALL_INTEREST_TIMED_OUT:
             printf("CCN_UPCALL_INTEREST_TIMED_OUT\n");
+            ret = CCN_UPCALL_RESULT_REEXPRESS;
             break;
         case CCN_UPCALL_FINAL:
             printf("CCN_UPCALL_FINAL\n");
-        
+            ccn_set_run_timeout(info->h, 0);
             break;
         default:
             break;
     }
     
-    ccn_set_run_timeout(info->h, 0);
     return ret;
 }
 
@@ -957,6 +957,12 @@ static enum ccn_upcall_res AskCallBack(struct ccn_closure *selfp,
             
             UpdateFencePoints(ts, info);
             printf("%s <%d>\n", ptr, ts);
+            
+            struct ccn_charbuf *uri = ccn_charbuf_create();
+            ccn_uri_append(uri, sfd->nm->buf, sfd->nm->length, 1);
+
+            PutToBuffer(ccn_charbuf_as_string(uri), ptr);
+
             
             break;
         case CCN_UPCALL_CONTENT_BAD:
@@ -1322,34 +1328,36 @@ void TestHandle(struct ccn * ccn, char* name)
 
 int main(int argc, const char * argv[])
 {
+    struct ccn *h = GetHandle();
     
     // Write Slice to Repo
-    // int res = WriteSlice(h, PREFIX, TOPO);
-    // printf("%d\n", res);
+    int res = WriteSlice(h, PREFIX, TOPO);
+    printf("%d\n", res);
     
-    // WatchOverRepo(h, PREFIX, TOPO);
+    
+    WatchOverRepo(h, PREFIX, TOPO);
     
 
     // Write to repo
-    // WriteToRepo(h, PREFIX, "2,34,21,22");
-    // ccn_run(h, 100);
+    WriteToRepo(PREFIX, "2,34,21,22");
+    ccn_run(h, -1);
     
     // this shall be called from C#
     // here is just for debug
-    WriteToStateBuffer("zening", 10);
+    //WriteToStateBuffer("zening", 10);
     
-    char* other = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/lioncub/state";
-    char* me = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/zening/state";
-    struct ccn *h = GetHandle();
-    RegisterInterestFilter(h, me);
+    //char* other = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/lioncub/state";
+    //char* me = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/zening/state";
+    //struct ccn *h = GetHandle();
+    //RegisterInterestFilter(h, me);
     
-    while (1) {
-        struct ccn *hh = GetHandle();
-        AskForState(hh, other, 1000);
-        ccn_run(h, 1000);
-        ccn_run(hh, 1000);
+    //while (1) {
+        //struct ccn *hh = GetHandle();
+        //AskForState(hh, other, 1000);
+        //ccn_run(h, 1000);
+        //ccn_run(hh, 1000);
 
-    }
+    //}
     
     
     /*

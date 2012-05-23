@@ -188,19 +188,6 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "test/test/test/main.c"
-         timestampString = "357558286.666309"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "99"
-         endingLineNumber = "99"
-         landmarkName = "sync_cb()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "test/test/test/main.c"
          timestampString = "358896969.179596"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
@@ -390,7 +377,7 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "test/test/test/main.c"
-         timestampString = "358906117.664214"
+         timestampString = "359441357.147447"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "1325"
@@ -429,11 +416,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "test/test/test/main.c"
-         timestampString = "358911187.883509"
+         timestampString = "359441400.134175"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "1346"
-         endingLineNumber = "1346"
+         startingLineNumber = "1348"
+         endingLineNumber = "1348"
          landmarkName = "main()"
          landmarkType = "7">
       </FileBreakpoint>
