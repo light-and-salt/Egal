@@ -231,7 +231,9 @@
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "1080"
-         endingLineNumber = "1080">
+         endingLineNumber = "1080"
+         landmarkName = "AskForState()"
+         landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "No"
@@ -268,7 +270,9 @@
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "1322"
-         endingLineNumber = "1322">
+         endingLineNumber = "1322"
+         landmarkName = "TestHandle()"
+         landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "No"
@@ -304,7 +308,7 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "1302"
          endingLineNumber = "1302"
-         landmarkName = "TestHandle()"
+         landmarkName = "TestCallBack()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
@@ -316,9 +320,7 @@
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "1114"
-         endingLineNumber = "1114"
-         landmarkName = "PublishState()"
-         landmarkType = "7">
+         endingLineNumber = "1114">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "No"
@@ -382,7 +384,7 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "1325"
          endingLineNumber = "1325"
-         landmarkName = "main()"
+         landmarkName = "TestHandle()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint

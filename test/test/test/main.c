@@ -228,7 +228,7 @@ int WatchOverRepo(struct ccn* h, char* p, char* t)
     slice = ccns_slice_create();
     ccns_slice_set_topo_prefix(slice, topo, prefix);
     
-    ccns = ccns_open(h, slice, &WatchCallBack, roothash, NULL);
+    ccns = ccns_open(h, slice, &WatchCallBack, NULL, NULL);
     
     // ccns_close(&ccns, NULL, NULL);
     
