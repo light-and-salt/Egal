@@ -7,6 +7,10 @@
 //
 //
 // This file shall be splited soon
+// and when that is done
+// the real files should belong to /Egal
+// instead of /TEST ...
+// --- CQ
 
 #include <stdio.h>
 #include <fcntl.h>
