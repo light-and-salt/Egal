@@ -1,6 +1,0 @@
-SyncTest
-*.a
-*.o
-*.dSYM
-*.dSYM/*
-Makefile
