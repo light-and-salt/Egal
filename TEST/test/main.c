@@ -56,6 +56,8 @@
 static char* TOPO = "ccnx:/ndn/broadcast/cqs/game0/scene0";
 static char* PREFIX = "ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0";
 
+static sig_atomic_t counter = 0; // lock
+
 char *
 hex_string(unsigned char *s, size_t l)
 {
@@ -101,7 +103,7 @@ WatchCallBack(struct ccns_handle *h,
     printf("%s\n", ccn_charbuf_as_string(uri));
     
         
-    ReadFromRepo(ccn_charbuf_as_string(uri));
+    ReadFromRepo(h, ccn_charbuf_as_string(uri));
     
     free(hexL);
     free(hexR);
@@ -289,25 +291,25 @@ struct Transform
 };
 
 struct ContentStruct {
-    struct SyncTestParms *parms;
+    // struct SyncTestParms *parms;
     struct ccn_charbuf *nm;
     struct ccn_charbuf *cb;
     struct ccn *ccn;
-    off_t bs;
+    // off_t bs;
     off_t fSize;
-    FILE *file;
+    // FILE *file;
     //
-    char* type; // MaxN, Transform
-    struct MaxN * maxn;
-    struct Transform * transform;
-    struct ccn_charbuf * resultbuf;
-    struct ccn_parsed_ContentObject *pcobuf;
-    struct ccn_indexbuf *compsbuf;
+    // char* type;
+    // struct MaxN * maxn;
+    // struct Transform * transform;
+    // struct ccn_charbuf * resultbuf;
+    // struct ccn_parsed_ContentObject *pcobuf;
+    // struct ccn_indexbuf *compsbuf;
     char* value;
     //
-    unsigned char *segData;
-    int nSegs;
-    int stored;
+    // unsigned char *segData;
+    // int nSegs;
+    // int stored;
     struct ccn_charbuf *template;
 };
 
@@ -484,83 +486,53 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
         case CCN_UPCALL_INTEREST: {
             printf("CCN_UPCALL_INTEREST\n");
             
-            int64_t seg = segFromInfo(info);
-            if (seg < 0) seg = 0;
             struct ccn_charbuf *uri = ccn_charbuf_create();
             ccn_uri_append(uri, sfd->nm->buf, sfd->nm->length, 0);
             char *str = ccn_charbuf_as_string(uri);
             ret = CCN_UPCALL_RESULT_INTEREST_CONSUMED;
-            if (seg >= 0 && seg < sfd->nSegs) {
+            {
                 struct ccn_charbuf *name = SyncCopyName(sfd->nm);
                 struct ccn_charbuf *cb = ccn_charbuf_create();
                 struct ccn_charbuf *cob = ccn_charbuf_create();
-                off_t bs = sfd->bs;
-                off_t pos = seg * bs;
-                off_t rs = sfd->fSize - pos;
-                if (rs > bs) rs = bs;
+                off_t rs = sfd->fSize;
                 
-                ccn_charbuf_reserve(cb, rs);
-                cb->length = rs;
-                char *cp = ccn_charbuf_as_string(cb);
-                
+                ccn_charbuf_append(cb, sfd->value, sfd->fSize);
+                                
                 int res = 0;
-                //cp = sfd->type;
-                strcpy(cp, sfd->value);
-                
-                if (res >= 0) {
+                                
+                {
                     struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
                     const void *cp = NULL;
                     size_t cs = 0;
                     sp.type = CCN_CONTENT_DATA;
                     cp = (const void *) cb->buf;
                     cs = cb->length;
-                    sp.template_ccnb = sfd->template;
+                    //sp.template_ccnb = sfd->template;
                     
-                    if (seg+1 == sfd->nSegs) sp.sp_flags |= CCN_SP_FINAL_BLOCK;
-                    ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, seg);
+                    sp.sp_flags |= CCN_SP_FINAL_BLOCK;
+                    ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, 0);
                     res |= ccn_sign_content(sfd->ccn,
                                             cob,
                                             name,
                                             &sp,
                                             cp,
                                             rs);
-                    if (sfd->parms->digest) {
-                        // not sure if this generates the right hash
-                        struct ccn_parsed_ContentObject pcos;
-                        ccn_parse_ContentObject(cob->buf, cob->length,
-                                                &pcos, NULL);
-                        ccn_digest_ContentObject(cob->buf, &pcos);
-                        if (pcos.digest_bytes > 0)
-                            res |= ccn_name_append(name, pcos.digest, pcos.digest_bytes);
-                    }
+                    
                     res |= ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
                     
                     if (res < 0) {
                         printf("seg %d, %s",
-                                       (int) seg,
+                                       (int) 0,
                                        str);
                         return -1;
                     }
                     
-                    // update the tracking
-                    unsigned char uc = sfd->segData[seg];
-                    if (uc == 0) {
-                        uc++;
-                        sfd->stored++;
-                    } else {
-                        if (sfd->parms->noDup) {
-                            printf("ERROR in storeHandler, duplicate segment request, seg %d, %s\n",
-                                    (int) seg, str);
-                        }
-                        if (uc < 255) uc++;
-                    }
-                    sfd->segData[seg] = uc;
                 }
                 
                 ccn_charbuf_destroy(&name);
                 ccn_charbuf_destroy(&cb);
                 ccn_charbuf_destroy(&cob);
-                ccn_set_run_timeout(h, 0);
+                //ccn_set_run_timeout(h, 0);
             }
             ccn_charbuf_destroy(&uri);
                         
@@ -576,15 +548,10 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
 
 }
 
-void WriteToRepo(char* dst, char* value)
+void WriteToRepo(struct ccn* ccn, char* dst, char* value)
 {
-    struct ccn* ccn = GetHandle();
-    // set sync parameters
-    struct SyncTestParms* parms = SetParameter();
+    // struct ccn* ccn = GetHandle();
     
-    
-    int bs = parms->blockSize;
-
     int res = 0;
         
     struct ccn_charbuf *cb = ccn_charbuf_create();
@@ -598,40 +565,14 @@ void WriteToRepo(char* dst, char* value)
     ccn_create_version(ccn, nm, CCN_V_NOW, 0, 0);
     
     struct ContentStruct *Data = NEW_STRUCT(1, ContentStruct);
-    Data->parms = parms;
-    Data->file = NULL;
-    Data->bs = bs;
+    // Data->bs = 4096;
     Data->nm = nm;
     Data->cb = cb;
     Data->ccn = ccn;
-    Data->fSize = sizeof(struct Transform);
-    Data->nSegs = (Data->fSize + bs -1) / bs;
-    Data->segData = NEW_ANY(Data->nSegs, unsigned char);
-    
+    Data->fSize = strlen(value);
     Data->value= value;
     
-    struct ccn_parsed_ContentObject pcobuf = {0};
-    Data->pcobuf = &pcobuf;
-    
-    struct ccn_charbuf *resultbuf = NULL;
-    resultbuf = ccn_charbuf_create();
-    Data->resultbuf = resultbuf;
-    
-    {
-        // make a template to govern the timestamp for the segments
-        // this allows duplicate segment requests to return the same hash
-        const unsigned char *vp = NULL;
-        ssize_t vs;
-        SyncGetComponentPtr(nm, SyncComponentCount(nm)-1, &vp, &vs);
-        if (vp != NULL && vs > 0) {
-            Data->template = ccn_charbuf_create();
-            ccnb_element_begin(Data->template, CCN_DTAG_SignedInfo);
-            ccnb_append_tagged_blob(Data->template, CCN_DTAG_Timestamp, vp, vs);
-            ccnb_element_end(Data->template);
-        } else 
-            printf("create template failed\n");
-    }
-
+       
     struct ccn_charbuf *template = SyncGenInterest(NULL,
                                                    1,
                                                    4,
@@ -657,11 +598,15 @@ void WriteToRepo(char* dst, char* value)
     // ccn_uri_append(u, cmd->buf, cmd->length, 1);
     // printf("after nounce: %s\n", ccn_charbuf_as_string(u));   
     
+    counter++;
+    ccn_set_run_timeout(ccn, 0);
     res = ccn_express_interest(ccn,
                          cmd,
                          action,
                          template);
-    ccn_run(ccn, -1);
+    counter--;
+    
+    // ccn_run(ccn, -1);
     
 }
 
@@ -698,7 +643,7 @@ int VerifySig()
     }
     verification_pubkey = ccn_keystore_public_key(keystore);
 
-//    size = strlen(rawbuf);
+//  size = strlen(rawbuf);
     size = sizeof(rawbuf);
     res = ccn_parse_ContentObject(rawbuf, size, co, comps);
     if (res < 0) {
@@ -739,41 +684,19 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
     struct ContentStruct *sfd = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
     
-    
-    
     switch (kind) {
         case CCN_UPCALL_CONTENT:
             printf("CCN_UPCALL_CONTENT\n");
             // printf("%s\n", info->content_ccnb);
             
-            
-            if (sfd->resultbuf != NULL) {
-                sfd->resultbuf->length = 0;
-                ccn_charbuf_append(sfd->resultbuf,
-                                   info->content_ccnb, info->pco->offset[CCN_PCO_E]);
-            }
-            if (sfd->pcobuf != NULL)
-                memcpy(sfd->pcobuf, info->pco, sizeof(*sfd->pcobuf));
-            
             // just for debug
             unsigned char* ptr = NULL;
             size_t length;
-            ptr = sfd->resultbuf->buf;
-            length = sfd->resultbuf->length;
-            ccn_content_get_value(ptr, length, sfd->pcobuf, &ptr, &length);
+            ptr = info->content_ccnb;
+            length = info->pco->offset[CCN_PCO_E];
+            ccn_content_get_value(ptr, length, info->pco, &ptr, &length);
             printf("%s\n", ptr);
-            
-            
-            // verify signature 1
-            // strcpy(rawbuf, info->content_ccnb);
-            // int res = VerifySig();
-            // printf("*content_ccnb* Verify Sig returns %d\n", res);
-            // verify signature 2
-            // strcpy(rawbuf, info->pco);
-            // res = VerifySig();
-            // printf("*pco* Verify Sig returns %d\n", res);
-            ccn_set_run_timeout(info->h, 0);
-
+            // ccn_set_run_timeout(info->h, 0);
             break;
         case CCN_UPCALL_CONTENT_BAD:
             printf("CCN_UPCALL_CONTENT_BAD\n");
@@ -784,7 +707,8 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             break;
         case CCN_UPCALL_FINAL:
             printf("CCN_UPCALL_FINAL\n");
-            ccn_set_run_timeout(info->h, 0);
+            free(selfp);
+            // ccn_set_run_timeout(info->h, 0);
             break;
         default:
             break;
@@ -794,10 +718,10 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
 }
 
 struct ccn* GetHandle();
-void ReadFromRepo(char* dst)
+void ReadFromRepo(struct ccn *ccn, char* dst)
 {
     
-    struct ccn *ccn = GetHandle();
+    // struct ccn *ccn = GetHandle();
     
     int res = 0;
     
@@ -812,11 +736,8 @@ void ReadFromRepo(char* dst)
     
     
     struct ContentStruct *Data = NEW_STRUCT(1, ContentStruct);
-    Data->resultbuf = ccn_charbuf_create();
     struct ccn_parsed_ContentObject pcos;
-    Data->pcobuf = &pcos;
-    Data->compsbuf = NULL;
-    
+        
     struct ccn_charbuf *template = SyncGenInterest(NULL,
                                                    1,
                                                    4,
@@ -827,31 +748,19 @@ void ReadFromRepo(char* dst)
     
     action->data = Data;
     
-    
+    counter++;
+    ccn_set_run_timeout(ccn, 0);
     res = ccn_express_interest(ccn,
                                nm,
                                action,
                                template);
-    ccn_run(ccn, -1);
-    
-    unsigned char* ptr = NULL;
-    size_t length;
-    ptr = Data->resultbuf->buf;
-    length = Data->resultbuf->length;
-    ccn_content_get_value(ptr, length, Data->pcobuf, &ptr, &length);
-    
-    struct ccn_charbuf *uri = ccn_charbuf_create();
-    ccn_uri_append(uri, nm->buf, nm->length, 1);
-    printf("%s\n", ccn_charbuf_as_string(uri));
-    printf("%s\n", ptr);
-    
-    PutToBuffer(ccn_charbuf_as_string(uri), ptr);
-        
-    // printf("Interop Buffer: %s\n", ReadFromBuffer());
+    counter--;
     
     
-    ccn_destroy(&ccn);
-    return;
+    //ccn_run(ccn, -1);
+    
+    // ccn_destroy(&ccn);
+    // return;
     
 }
 
@@ -1332,21 +1241,39 @@ void TestHandle(struct ccn * ccn, char* name)
                          template);
 }
 
+static struct ccn* ghandle;
+void *KeepRunning(void *threadid)
+{
+    printf("ccn running...\n");
+    while (1) {
+        while (counter>0)
+            ;
+        ccn_run(ghandle, -1);
+
+    }
+}
+
 int main(int argc, const char * argv[])
 {
-    struct ccn *h = GetHandle();
+    ghandle = GetHandle();
+    pthread_t run;
+    pthread_create(&run, NULL, KeepRunning, NULL);
     
     // Write Slice to Repo
-    int res = WriteSlice(h, PREFIX, TOPO);
-    printf("%d\n", res);
+    // int res = WriteSlice(h, PREFIX, TOPO);
+    // printf("%d\n", res);
     
     
-    WatchOverRepo(h, PREFIX, TOPO);
+    // WatchOverRepo(h, PREFIX, TOPO);
     
 
     // Write to repo
-    WriteToRepo(PREFIX, "2,34,21,22");
-    ccn_run(h, -1);
+    printf("writting to repo...\n");
+    WriteToRepo(ghandle, PREFIX, "我有一头小毛驴");
+    
+    sleep(3);
+    //printf("reading from repo...\n");
+    ReadFromRepo(ghandle, PREFIX);
     
     // this shall be called from C#
     // here is just for debug
@@ -1376,5 +1303,6 @@ int main(int argc, const char * argv[])
     
     // Read from repo
     // printf("%s", ReadFromRepo(h, PREFIX));
+    pthread_exit(NULL);
 }
 

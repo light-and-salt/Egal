@@ -11,9 +11,9 @@
 
 int WriteSlice(struct ccn* h, char* p, char* t);
 
-void WriteToRepo(char* dst, char* value);
+void WriteToRepo(struct ccn* ccn, char* dst, char* value);
 
-void ReadFromRepo(char* dst);
+void ReadFromRepo(struct ccn *ccn, char* dst);
 
 // int ReadFromBuffer(struct bufnode* temp);
 
