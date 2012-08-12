@@ -488,56 +488,60 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
             
             struct ccn_charbuf *uri = ccn_charbuf_create();
             ccn_uri_append(uri, sfd->nm->buf, sfd->nm->length, 0);
-            char *str = ccn_charbuf_as_string(uri);
+            // char *str = ccn_charbuf_as_string(uri);
+            
             ret = CCN_UPCALL_RESULT_INTEREST_CONSUMED;
-            {
-                struct ccn_charbuf *name = SyncCopyName(sfd->nm);
-                struct ccn_charbuf *cb = ccn_charbuf_create();
-                struct ccn_charbuf *cob = ccn_charbuf_create();
-                off_t rs = sfd->fSize;
-                
-                ccn_charbuf_append(cb, sfd->value, sfd->fSize);
-                                
-                int res = 0;
-                                
-                {
-                    struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
-                    const void *cp = NULL;
-                    size_t cs = 0;
-                    sp.type = CCN_CONTENT_DATA;
-                    cp = (const void *) cb->buf;
-                    cs = cb->length;
-                    //sp.template_ccnb = sfd->template;
-                    
-                    sp.sp_flags |= CCN_SP_FINAL_BLOCK;
-                    ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, 0);
-                    res |= ccn_sign_content(sfd->ccn,
-                                            cob,
-                                            name,
-                                            &sp,
-                                            cp,
-                                            rs);
-                    
-                    res |= ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
-                    
-                    if (res < 0) {
-                        printf("seg %d, %s",
-                                       (int) 0,
-                                       str);
-                        return -1;
-                    }
-                    
-                }
-                
-                ccn_charbuf_destroy(&name);
-                ccn_charbuf_destroy(&cb);
-                ccn_charbuf_destroy(&cob);
-                //ccn_set_run_timeout(h, 0);
+            
+            struct ccn_charbuf *name = SyncCopyName(sfd->nm);
+            struct ccn_charbuf *cb = ccn_charbuf_create();
+            struct ccn_charbuf *cob = ccn_charbuf_create();
+            off_t rs = sfd->fSize;
+            
+            ccn_charbuf_append(cb, sfd->value, sfd->fSize);
+            
+            int res = 0;
+            
+            
+            struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
+            const void *cp = NULL;
+            size_t cs = 0;
+            sp.type = CCN_CONTENT_DATA;
+            cp = (const void *) cb->buf;
+            cs = cb->length;
+            //sp.template_ccnb = sfd->template;
+            
+            sp.sp_flags |= CCN_SP_FINAL_BLOCK;
+            ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, 0);
+            res |= ccn_sign_content(sfd->ccn,
+                                    cob,
+                                    name,
+                                    &sp,
+                                    cp,
+                                    rs);
+            
+            res |= ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
+            
+            if (res < 0) {
+                // printf("seg %d, %s", (int) 0, str);
+                return -1;
             }
+            
+            
+            
+            ccn_charbuf_destroy(&name);
+            ccn_charbuf_destroy(&cb);
+            ccn_charbuf_destroy(&cob);
+            //ccn_set_run_timeout(h, 0);
+            
             ccn_charbuf_destroy(&uri);
                         
             break;
         }
+            
+        case CCN_UPCALL_CONTENT:
+            printf("CCN_UPCALL_CONTENT\n");
+            break;
+            
         default:
             ret = CCN_UPCALL_RESULT_ERR;
             printf("CCN_UPCALL_RESULT_ERR\n");
@@ -1271,9 +1275,9 @@ int main(int argc, const char * argv[])
     printf("writting to repo...\n");
     WriteToRepo(ghandle, PREFIX, "我有一头小毛驴");
     
-    sleep(3);
+    // sleep(3);
     //printf("reading from repo...\n");
-    ReadFromRepo(ghandle, PREFIX);
+    // ReadFromRepo(ghandle, PREFIX);
     
     // this shall be called from C#
     // here is just for debug
