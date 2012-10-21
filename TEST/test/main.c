@@ -1264,11 +1264,11 @@ int main(int argc, const char * argv[])
     pthread_create(&run, NULL, KeepRunning, NULL);
     
     // Write Slice to Repo
-    // int res = WriteSlice(h, PREFIX, TOPO);
+    int res = WriteSlice(ghandle, PREFIX, TOPO);
     // printf("%d\n", res);
     
     
-    // WatchOverRepo(h, PREFIX, TOPO);
+    WatchOverRepo(ghandle, PREFIX, TOPO);
     
 
     // Write to repo
