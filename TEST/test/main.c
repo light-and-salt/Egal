@@ -53,8 +53,8 @@
 #define TIMEOUT 10
 #define INTEROP_BUFFER_SIZE 8192
 
-static char* TOPO = "ccnx:/ndn/broadcast/cqs/game0/scene0";
-static char* PREFIX = "ccnx:/ndn/ucla.edu/apps/cqs/game0/scene0";
+static char* TOPO = "ccnx:/ndn/broadcast/EgalCar";
+static char* PREFIX = "ccnx:/ndn/ucla.edu/apps/EgalCar";
 
 static sig_atomic_t counter = 0; // lock
 
@@ -103,7 +103,7 @@ WatchCallBack(struct ccns_handle *h,
     printf("%s\n", ccn_charbuf_as_string(uri));
     
         
-    ReadFromRepo(h, ccn_charbuf_as_string(uri));
+    ReadFromRepo(ccn_charbuf_as_string(uri));
     
     free(hexL);
     free(hexR);
@@ -118,60 +118,26 @@ int WriteSlice(struct ccn* h, char* p, char* t)
     int res;
     struct ccns_slice *slice;
     struct ccn_charbuf *prefix = ccn_charbuf_create();
-    struct ccn_charbuf *roothash = NULL;
     struct ccn_charbuf *topo = ccn_charbuf_create();
-    int timeout = 10*1000;
-    unsigned i, j, n;
     
     ccn_name_init(prefix);
     ccn_name_init(topo);
     
-    // case 'p':
-    if (0 > ccn_name_from_uri(prefix, p)) 
-    {
-        printf("Prefix Not Right.\n");
-        return -1;
-    }
-    // case 'r':
-    char* temp = "";
-    n = strlen(temp);
-    if (n == 0) {
-        roothash = ccn_charbuf_create();
-    }
-    if ((n % 2) != 0)
-    {
-        printf("Roothash must be even.\n");
-        return -1;
-    }
-    roothash = ccn_charbuf_create_n(n / 2);
-    for (i = 0; i < (n / 2); i++) {
-        j = (hex_value(temp[2*i]) << 4) | hex_value(temp[1+2*i]);
-        ccn_charbuf_append_value(roothash, j, 1);
-    }
+    res = ccn_name_from_uri(prefix, p);
+    if (res < 0) 
+         printf("Prefix Not Right.\n");
     
-    // case 't':
-    if (0 > ccn_name_from_uri(topo, t)) 
-    {
+    res = ccn_name_from_uri(topo, t);
+    if (res < 0)
         printf("Topo not correct.\n");
-        return -1;
-    }
-                
-    // case 'w':
-    timeout = TIMEOUT;
-    if (timeout < -1) 
-    {
-        printf("Timeout cannot be less than -1");
-        return -1;
-    }
-    timeout *= 1000;
-    
-    
+
     
     slice = ccns_slice_create();
     ccns_slice_set_topo_prefix(slice, topo, prefix);
-    
+    counter++;
+    ccn_set_run_timeout(h, 0);
     res = ccns_write_slice(h, slice, prefix);
-    
+    counter--;
     ccns_slice_destroy(&slice);
     
     return res;
@@ -191,46 +157,14 @@ int WatchOverRepo(struct ccn* h, char* p, char* t)
     ccn_name_init(prefix);
     ccn_name_init(topo);
     
-    // case 'p':
-    if (0 > ccn_name_from_uri(prefix, p)) 
-    {
+    res = ccn_name_from_uri(prefix, p);
+    if (res<0)
         printf("Prefix Not Right.\n");
-        return -1;
-    }
-    // case 'r':
-    char* temp = "";
-    n = strlen(temp);
-    if (n == 0) {
-        roothash = ccn_charbuf_create();
-    }
-    if ((n % 2) != 0)
-    {
-        printf("Roothash must be even.\n");
-        return -1;
-    }
-    roothash = ccn_charbuf_create_n(n / 2);
-    for (i = 0; i < (n / 2); i++) {
-        j = (hex_value(temp[2*i]) << 4) | hex_value(temp[1+2*i]);
-        ccn_charbuf_append_value(roothash, j, 1);
-    }
-    
-    // case 't':
-    if (0 > ccn_name_from_uri(topo, t)) 
-    {
+
+        
+    res = ccn_name_from_uri(topo, t);
+    if (res < 0)
         printf("Topo not correct.\n");
-        return -1;
-    }
-    
-    // case 'w':
-    timeout = TIMEOUT;
-    if (timeout < -1) 
-    {
-        printf("Timeout cannot be less than -1");
-        return -1;
-    }
-    timeout *= 1000;
-    
-    
     
     
     slice = ccns_slice_create();
@@ -711,8 +645,8 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             break;
         case CCN_UPCALL_FINAL:
             printf("CCN_UPCALL_FINAL\n");
-            free(selfp);
-            // ccn_set_run_timeout(info->h, 0);
+            //free(selfp);
+            ccn_set_run_timeout(info->h, 0);
             break;
         default:
             break;
@@ -722,10 +656,10 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
 }
 
 struct ccn* GetHandle();
-void ReadFromRepo(struct ccn *ccn, char* dst)
+void ReadFromRepo(char* dst)
 {
     
-    // struct ccn *ccn = GetHandle();
+    struct ccn *ccn = GetHandle();
     
     int res = 0;
     
@@ -752,19 +686,16 @@ void ReadFromRepo(struct ccn *ccn, char* dst)
     
     action->data = Data;
     
-    counter++;
-    ccn_set_run_timeout(ccn, 0);
+    
     res = ccn_express_interest(ccn,
                                nm,
                                action,
                                template);
-    counter--;
     
+    ccn_run(ccn, -1);
     
-    //ccn_run(ccn, -1);
-    
-    // ccn_destroy(&ccn);
-    // return;
+    ccn_destroy(&ccn);
+    return;
     
 }
 
@@ -991,11 +922,13 @@ void AskForState(struct ccn* ccn, char* name, int timeout)
     
     action->data = State;
     
-    
+    counter++;
+    ccn_set_run_timeout(ccn, 0);
     res = ccn_express_interest(ccn,
                                nm,
                                action,
                                template);
+    counter--;
     //ccn_run(ccn, timeout);
     //ccn_destroy(&ccn);
     
@@ -1265,8 +1198,7 @@ int main(int argc, const char * argv[])
     
     // Write Slice to Repo
     int res = WriteSlice(ghandle, PREFIX, TOPO);
-    // printf("%d\n", res);
-    
+    printf("%d\n", res);
     
     WatchOverRepo(ghandle, PREFIX, TOPO);
     
@@ -1275,38 +1207,22 @@ int main(int argc, const char * argv[])
     printf("writting to repo...\n");
     WriteToRepo(ghandle, PREFIX, "我有一头小毛驴");
     
-    // sleep(3);
-    //printf("reading from repo...\n");
-    // ReadFromRepo(ghandle, PREFIX);
+    char* other = "ccnx:/ndn/ucla.edu/apps/EgalCar/desktop";
+    char* me = "ccnx:/ndn/ucla.edu/apps/EgalCar/xcode";
     
-    // this shall be called from C#
-    // here is just for debug
-    //WriteToStateBuffer("zening", 10);
-    
-    //char* other = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/lioncub/state";
-    //char* me = "ccnx:/ndn/ucla.edu/apps/cqs/car/scene0/zening/state";
-    //struct ccn *h = GetHandle();
-    //RegisterInterestFilter(h, me);
-    
-    //while (1) {
-        //struct ccn *hh = GetHandle();
-        //AskForState(hh, other, 1000);
-        //ccn_run(h, 1000);
-        //ccn_run(hh, 1000);
-
-    //}
+    // just for test
+    WriteToStateBuffer("xcode", 10);
+    RegisterInterestFilter(ghandle, me);
     
     
-    /*
-    struct ccn *h = GetHandle();
     while (1) {
-        TestHandle(h, other);
-        ccn_run(h, 1000);
+        AskForState(ghandle, other, 1000);
+        sleep(3);
     }
-    */               
-    
-    // Read from repo
-    // printf("%s", ReadFromRepo(h, PREFIX));
+
     pthread_exit(NULL);
 }
+
+
+
 
