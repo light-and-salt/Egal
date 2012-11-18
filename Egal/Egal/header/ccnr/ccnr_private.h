@@ -47,7 +47,9 @@ struct hashtb;
 struct ccnr_meter;
 struct ccn_btree;
 
+struct sync_plumbing;
 struct SyncBaseStruct;
+
 /*
  * These are defined in this header.
  */
@@ -225,6 +227,15 @@ struct ccnr_handle {
     unsigned long interests_stuffed;
     unsigned long content_from_accession_hits;
     unsigned long content_from_accession_misses;
+    unsigned long count_lmc_found;
+    unsigned long count_lmc_found_iters;
+    unsigned long count_lmc_notfound;
+    unsigned long count_lmc_notfound_iters;
+    unsigned long count_rmc_found;
+    unsigned long count_rmc_found_iters;
+    unsigned long count_rmc_notfound;
+    unsigned long count_rmc_notfound_iters;
+    /* Control switches and knobs */
     unsigned start_write_scope_limit;    /**< Scope on start-write must be <= this value.  3 indicates unlimited */
     unsigned short seed[3];         /**< for PRNG */
     int running;                    /**< true while should be running */
@@ -252,7 +263,8 @@ struct ccnr_handle {
     struct ccn_scheduled_event *direct_client_refresh;
     struct ccn_scheduled_event *notice_push;
     /* items related to sync/repo integration */
-    struct SyncBaseStruct *sync_handle;  /**< handle to pass to the sync code */
+    struct sync_plumbing *sync_plumbing;  /**< encapsulates methods and data */
+    struct SyncBaseStruct *sync_base;
     ccnr_accession notify_after;  /**< starting item for notifying sync */
     ccnr_accession active_enum[CCNR_MAX_ENUM]; /**< active sync enumerations */
     

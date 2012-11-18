@@ -33,6 +33,7 @@
 #include <ccn/ccn.h>
 #include <ccn/charbuf.h>
 #include <ccn/ccn_private.h>
+#include <ccn/hashtb.h>
 #include <ccn/schedule.h>
 #include <ccn/sockaddrutil.h>
 #include <ccn/uri.h>
@@ -401,7 +402,7 @@ r_proto_expect_content(struct ccn_closure *selfp,
     ic = info->interest_comps;
     
     content = process_incoming_content(ccnr, r_io_fdholder_from_fd(ccnr, ccn_get_connection_fd(info->h)),
-                                       (void *)ccnb, ccnb_size);
+                                       (void *)ccnb, ccnb_size, NULL);
     if (content == NULL) {
         ccnr_msg(ccnr, "r_proto_expect_content: failed to process incoming content");
         return(CCN_UPCALL_RESULT_ERR);
@@ -554,8 +555,10 @@ r_proto_policy_update(struct ccn_schedule *sched,
         goto Bail;
     }
     policy_link_cob = ccnr_init_policy_link_cob(ccnr, ccnr->direct_client, name);
-    if (policy_link_cob != NULL)
+    if (policy_link_cob != NULL) {
+        ccn_charbuf_destroy(&ccnr->policy_link_cob);
         ccnr->policy_link_cob = policy_link_cob;
+    }
     policyFileName = ccn_charbuf_create();
     ccn_charbuf_putf(policyFileName, "%s/repoPolicy", ccnr->directory);
     fd = open(ccn_charbuf_as_string(policyFileName), O_WRONLY | O_CREAT, 0666);
@@ -810,6 +813,7 @@ r_proto_start_write_checked(struct ccn_closure *selfp,
     ccn_charbuf_destroy(&interest);
     ccn_indexbuf_destroy(&comps);
     if (content == NULL) {
+        ccn_charbuf_destroy(&name);
         if (CCNSHOULDLOG(ccnr, LM_128, CCNL_FINE))
             ccnr_msg(ccnr, "r_proto_start_write_checked: NOT PRESENT");
         // XXX - dropping into the start_write case means we do not check the provided digest when fetching, so this is not completely right.
@@ -918,6 +922,21 @@ Bail:
     return(ans);
 }
 
+void
+r_proto_finalize_enum_state(struct hashtb_enumerator *e)
+{
+    struct enum_state *es = e->data;
+    unsigned i;
+    
+    ccn_charbuf_destroy(&es->name);
+    ccn_charbuf_destroy(&es->interest); // unnecessary?
+    ccn_charbuf_destroy(&es->reply_body);
+    ccn_indexbuf_destroy(&es->interest_comps);
+    for (i = 0; i < ENUM_N_COBS; i++)
+        ccn_charbuf_destroy(&(es->cob[i]));
+    return;
+}
+
 #define ENUMERATION_STATE_TICK_MICROSEC 1000000
 /**
  * Remove expired enumeration table entries
@@ -941,15 +960,12 @@ reap_enumerations(struct ccn_schedule *sched,
     for (es = e->data; es != NULL; es = e->data) {
         if (es->active != ES_ACTIVE &&
             r_util_timecmp(es->lastuse_sec + es->lifetime, es->lastuse_usec,
-                            ccnr->sec, ccnr->usec) <= 0) {
-            if (CCNSHOULDLOG(ccnr, LM_8, CCNL_FINER))
-                ccnr_debug_ccnb(ccnr, __LINE__, "reap enumeration state", NULL,
-                                es->name->buf, es->name->length);            
-            // everything but the name has already been destroyed
-            ccn_charbuf_destroy(&es->name);
-            // remove the entry from the hash table
-            hashtb_delete(e);
-        }
+                           ccnr->sec, ccnr->usec) <= 0) {
+                if (CCNSHOULDLOG(ccnr, LM_8, CCNL_FINER))
+                    ccnr_debug_ccnb(ccnr, __LINE__, "reap enumeration state", NULL,
+                                    es->name->buf, es->name->length);            		// remove the entry from the hash table, finalization frees data
+                hashtb_delete(e);
+            }
         hashtb_next(e);
     }
     hashtb_end(e);
@@ -1070,13 +1086,19 @@ r_proto_begin_enumeration(struct ccn_closure *selfp,
     if (content != NULL &&
         !r_store_content_matches_interest_prefix(ccnr, content, interest->buf, interest->length))
         content = NULL;
+    ccn_charbuf_destroy(&es->cob[0]);
     es->cob[0] = ccn_charbuf_create();
     memset(es->cob_deferred, 0, sizeof(es->cob_deferred));
+    ccn_charbuf_destroy(&es->reply_body);
     es->reply_body = ccn_charbuf_create();
     ccnb_element_begin(es->reply_body, CCN_DTAG_Collection);
     es->content = content;
+    ccn_charbuf_destroy(&es->interest);
     es->interest = interest;
+    interest = NULL;
+    ccn_indexbuf_destroy(&es->interest_comps);
     es->interest_comps = comps;
+    comps = NULL;
     es->next_segment = 0;
     es->lastuse_sec = ccnr->sec;
     es->lastuse_usec = ccnr->usec;
@@ -1093,8 +1115,6 @@ r_proto_begin_enumeration(struct ccn_closure *selfp,
         ans = r_proto_continue_enumeration(selfp, kind, info, marker_comp);
     else
         ans = CCN_UPCALL_RESULT_OK;
-    return(ans);
-    
 Bail:
     ccn_charbuf_destroy(&name);
     ccn_charbuf_destroy(&interest);
@@ -1570,7 +1590,7 @@ r_proto_initiate_key_fetch(struct ccnr_handle *ccnr,
     }
     ccn_charbuf_append_closer(templ); /* </Interest> */
     /* See if we already have it - if so we declare we are done. */
-    if (r_sync_lookup(ccnr, templ, NULL) == 0) {
+    if (r_lookup(ccnr, templ, NULL) == 0) {
         res = 1;
         // Note - it might be that the thing we found is not really the thing
         // we were after.  For now we don't check.
