@@ -234,7 +234,10 @@ struct ContentStruct {
     struct ccn_charbuf *cb;
     struct ccn *ccn;
     // off_t bs;
-    off_t fSize;
+    int length;
+    char* value;
+    struct ccn_charbuf *template;
+
     // FILE *file;
     //
     // char* type;
@@ -243,13 +246,12 @@ struct ContentStruct {
     // struct ccn_charbuf * resultbuf;
     // struct ccn_parsed_ContentObject *pcobuf;
     // struct ccn_indexbuf *compsbuf;
-    char* value;
+    
     //
     // unsigned char *segData;
     // int nSegs;
     // int stored;
-    struct ccn_charbuf *template;
-};
+    };
 
 struct StateStruct {
     struct SyncTestParms *parms;
@@ -430,35 +432,32 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
             struct ccn_charbuf *uri = ccn_charbuf_create();
             ccn_uri_append(uri, sfd->nm->buf, sfd->nm->length, 0);
             // char *str = ccn_charbuf_as_string(uri);
-            
-            ret = CCN_UPCALL_RESULT_INTEREST_CONSUMED;
-            
             struct ccn_charbuf *name = SyncCopyName(sfd->nm);
+            ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, 0);
             struct ccn_charbuf *cb = ccn_charbuf_create();
-            struct ccn_charbuf *cob = ccn_charbuf_create();
-            off_t rs = sfd->fSize;
-            
-            ccn_charbuf_append(cb, sfd->value, sfd->fSize);
-            
-            int res = 0;
-            
+            ccn_charbuf_append(cb, sfd->value, sfd->length);
             
             struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
-            const void *cp = NULL;
-            size_t cs = 0;
-            sp.type = CCN_CONTENT_DATA;
-            cp = (const void *) cb->buf;
-            cs = cb->length;
+            // sp.type = CCN_CONTENT_DATA;
             //sp.template_ccnb = sfd->template;
+            //sp.sp_flags |= CCN_SP_FINAL_BLOCK;
             
-            sp.sp_flags |= CCN_SP_FINAL_BLOCK;
-            ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, 0);
-            res |= ccn_sign_content(sfd->ccn,
+            int res = 0;
+            struct ccn_charbuf *cob = ccn_charbuf_create();
+            res |= ccn_sign_content(h,
                                     cob,
                                     name,
                                     &sp,
-                                    cp,
-                                    rs);
+                                    sfd->value,
+                                    sfd->length);
+            /*
+            res = ccn_content_matches_interest(cob->buf, cob->length,
+                                               1, NULL,
+                                               info->interest_ccnb,
+                                               info->pi->offset[CCN_PI_E],
+                                               info->pi);
+            printf("match? %d\n", res);
+            */
             
             res |= ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
             
@@ -475,7 +474,8 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
             ccn_set_run_timeout(h, 0);
             
             ccn_charbuf_destroy(&uri);
-                        
+            
+            ret = CCN_UPCALL_RESULT_INTEREST_CONSUMED;
             break;
         }
             
@@ -514,7 +514,7 @@ void WriteToRepo(char* dst, char* value)
     Data->nm = nm;
     Data->cb = cb;
     Data->ccn = ccn;
-    Data->fSize = strlen(value);
+    Data->length = strlen(value);
     Data->value= value;
     
        
@@ -1202,7 +1202,7 @@ int main(int argc, const char * argv[])
     // State Sync block should NOT
     // be tested together!
     
-    /*
+    
     // *** Asset Sync *** //
     // Write Slice to Repo
     int res = WriteSlice(PREFIX, TOPO);
@@ -1212,9 +1212,9 @@ int main(int argc, const char * argv[])
     //printf("writting to repo...\n");
     WriteToRepo(PREFIX, "我有一头小毛驴");
     WatchOverRepo(PREFIX, TOPO);
-    */
     
     
+    /*
     // *** State Sync *** //
     char* other = "ccnx:/ndn/ucla.edu/apps/EgalCar/desktop";
     char* me = "ccnx:/ndn/ucla.edu/apps/EgalCar/xcode";
@@ -1227,6 +1227,7 @@ int main(int argc, const char * argv[])
         AskForState(h, other, 1000);
         ccn_run(h, 1000);
     }
+     */
 
 }
 
