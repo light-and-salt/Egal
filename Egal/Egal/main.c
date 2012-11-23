@@ -601,7 +601,8 @@ int VerifySig()
 
 size_t getPCOoffset(struct ccn_parsed_ContentObject *pco, enum ccn_parsed_content_object_offsetid offset)
 {
-    return pco->offset[offset];
+    size_t temp = pco->offset[offset];
+    return temp;
 }
 
 
