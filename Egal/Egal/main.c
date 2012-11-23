@@ -604,6 +604,7 @@ size_t getPCOoffset(struct ccn_parsed_ContentObject *pco, enum ccn_parsed_conten
     return pco->offset[offset];
 }
 
+
 static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
                                          enum ccn_upcall_kind kind,
                                          struct ccn_upcall_info *info)
@@ -618,11 +619,10 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             
             // just for debug
             unsigned char* ptr = NULL;
-            size_t length;
-            ptr = info->content_ccnb;
-            length = getPCOoffset(info->pco, CCN_PCO_E);
-            //length = info->pco->offset[CCN_PCO_E];
-            ccn_content_get_value(ptr, length, info->pco, &ptr, &length);
+            size_t length = 0;
+            
+            ccn_content_get_value(info->content_ccnb, getPCOoffset(info->pco, CCN_PCO_E),
+                                  info->pco, &ptr, &length);
             printf("%s\n", ptr);
             // ccn_set_run_timeout(info->h, 0);
             break;
