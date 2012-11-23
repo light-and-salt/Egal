@@ -218,7 +218,7 @@ struct Transform
     int timestamp;
 };
 
-struct ContentStruct {
+struct AssetStruct {
     // struct SyncTestParms *parms;
     struct ccn_charbuf *nm;
     struct ccn_charbuf *cb;
@@ -228,19 +228,6 @@ struct ContentStruct {
     char* value;
     struct ccn_charbuf *template;
 
-    // FILE *file;
-    //
-    // char* type;
-    // struct MaxN * maxn;
-    // struct Transform * transform;
-    // struct ccn_charbuf * resultbuf;
-    // struct ccn_parsed_ContentObject *pcobuf;
-    // struct ccn_indexbuf *compsbuf;
-    
-    //
-    // unsigned char *segData;
-    // int nSegs;
-    // int stored;
     };
 
 struct StateStruct {
@@ -408,7 +395,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
     printf("Write Call Back\n");
     struct ccn *h = info->h;
     
-    struct ContentStruct *data = selfp->data;
+    struct AssetStruct *data = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
     switch (kind) {
         case CCN_UPCALL_FINAL:
@@ -502,7 +489,7 @@ void WriteToRepo(char* dst, char* value)
     }
     ccn_create_version(ccn, nm, CCN_V_NOW, 0, 0);
     
-    struct ContentStruct *Data = NEW_STRUCT(1, ContentStruct);
+    struct AssetStruct *Data = NEW_STRUCT(1, AssetStruct);
     // Data->bs = 4096;
     Data->nm = nm;
     Data->cb = cb;
@@ -617,7 +604,7 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
                                          struct ccn_upcall_info *info)
 {
     printf("Read Call Back\n");
-    struct ContentStruct *sfd = selfp->data;
+    struct AssetStruct *sfd = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
     
     switch (kind) {
@@ -671,7 +658,7 @@ void ReadFromRepo(char* dst)
     }
     
     
-    struct ContentStruct *Data = NEW_STRUCT(1, ContentStruct);
+    struct AssetStruct *Data = NEW_STRUCT(1, AssetStruct);
     struct ccn_parsed_ContentObject pcos;
         
     struct ccn_charbuf *template = SyncGenInterest(NULL,
