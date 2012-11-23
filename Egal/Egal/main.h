@@ -23,5 +23,6 @@ int WatchOverRepo(char* p, char* t);
 
 char* Buffer(char mode, char* name, char* content);
 
+size_t getPCOoffset(struct ccn_parsed_ContentObject *pco, enum ccn_parsed_content_object_offsetid offset);
 
 #endif

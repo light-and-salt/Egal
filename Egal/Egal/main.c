@@ -599,12 +599,16 @@ int VerifySig()
     
 }
 
+size_t getPCOoffset(struct ccn_parsed_ContentObject *pco, enum ccn_parsed_content_object_offsetid offset)
+{
+    return pco->offset[offset];
+}
+
 static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
                                          enum ccn_upcall_kind kind,
                                          struct ccn_upcall_info *info)
 {
     printf("Read Call Back\n");
-    struct AssetStruct *sfd = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
     
     switch (kind) {
@@ -616,7 +620,8 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             unsigned char* ptr = NULL;
             size_t length;
             ptr = info->content_ccnb;
-            length = info->pco->offset[CCN_PCO_E];
+            length = getPCOoffset(info->pco, CCN_PCO_E);
+            //length = info->pco->offset[CCN_PCO_E];
             ccn_content_get_value(ptr, length, info->pco, &ptr, &length);
             printf("%s\n", ptr);
             // ccn_set_run_timeout(info->h, 0);
@@ -659,7 +664,6 @@ void ReadFromRepo(char* dst)
     
     
     struct AssetStruct *Data = NEW_STRUCT(1, AssetStruct);
-    struct ccn_parsed_ContentObject pcos;
         
     struct ccn_charbuf *template = SyncGenInterest(NULL,
                                                    1,
@@ -670,7 +674,6 @@ void ReadFromRepo(char* dst)
     action->p = ReadCallBack;
     
     action->data = Data;
-    
     
     res = ccn_express_interest(ccn,
                                nm,
