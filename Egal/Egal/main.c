@@ -81,32 +81,22 @@ int hex_value(char c)
 
 void PutToBuffer(char* name, char* content);
 int
-WatchCallBack(struct ccns_handle *h,
+WatchCallBack(struct ccns_name_closure *nc,
         struct ccn_charbuf *lhash,
         struct ccn_charbuf *rhash,
         struct ccn_charbuf *name)
 {
     printf("Watch Call Back\n");
         
-    char *hexL;
-    char *hexR;
     struct ccn_charbuf *uri = ccn_charbuf_create();
     ccn_uri_append(uri, name->buf, name->length, 1);
-    if (lhash == NULL || lhash->length == 0) {
-        hexL = strdup("none");
-    } else
-        hexL = hex_string(lhash->buf, lhash->length);
-    if (rhash == NULL || rhash->length == 0) {
-        hexR = strdup("none");
-    } else
-        hexR = hex_string(rhash->buf, rhash->length);
+    
     printf("%s\n", ccn_charbuf_as_string(uri));
     
         
     ReadFromRepo(ccn_charbuf_as_string(uri));
     
-    free(hexL);
-    free(hexR);
+   
     ccn_charbuf_destroy(&uri);
     return(0);
 }
@@ -418,7 +408,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
     printf("Write Call Back\n");
     struct ccn *h = info->h;
     
-    struct ContentStruct *sfd = selfp->data;
+    struct ContentStruct *data = selfp->data;
     enum ccn_upcall_res ret = CCN_UPCALL_RESULT_OK;
     switch (kind) {
         case CCN_UPCALL_FINAL:
@@ -430,17 +420,20 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
             printf("CCN_UPCALL_INTEREST\n");
             
             struct ccn_charbuf *uri = ccn_charbuf_create();
-            ccn_uri_append(uri, sfd->nm->buf, sfd->nm->length, 0);
+            ccn_uri_append(uri, data->nm->buf, data->nm->length, 0);
             // char *str = ccn_charbuf_as_string(uri);
-            struct ccn_charbuf *name = SyncCopyName(sfd->nm);
+            
+            struct ccn_charbuf *name = SyncCopyName(data->nm);
+            //printf("name length before numeric: %zd\n", name->length);
             ccn_name_append_numeric(name, CCN_MARKER_SEQNUM, 0);
+            // the above line must be added, and it must be CCN_MARKER_SEQNUM
+            // otherwise WriteToRepo would work fine but ccnsyncwatch won't recoginze it...
+            //printf("name length after numeric: %zd\n", name->length);
+
             struct ccn_charbuf *cb = ccn_charbuf_create();
-            ccn_charbuf_append(cb, sfd->value, sfd->length);
+            ccn_charbuf_append(cb, data->value, data->length);
             
             struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
-            // sp.type = CCN_CONTENT_DATA;
-            //sp.template_ccnb = sfd->template;
-            //sp.sp_flags |= CCN_SP_FINAL_BLOCK;
             
             int res = 0;
             struct ccn_charbuf *cob = ccn_charbuf_create();
@@ -448,8 +441,8 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
                                     cob,
                                     name,
                                     &sp,
-                                    sfd->value,
-                                    sfd->length);
+                                    data->value,
+                                    data->length);
             /*
             res = ccn_content_matches_interest(cob->buf, cob->length,
                                                1, NULL,
@@ -459,7 +452,7 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
             printf("match? %d\n", res);
             */
             
-            res |= ccn_put(sfd->ccn, (const void *) cob->buf, cob->length);
+            res = ccn_put(data->ccn, (const void *) cob->buf, cob->length);
             
             if (res < 0) {
                 printf("ccn_put not right\n");
@@ -471,9 +464,9 @@ static enum ccn_upcall_res WriteCallBack(struct ccn_closure *selfp,
             ccn_charbuf_destroy(&name);
             ccn_charbuf_destroy(&cb);
             ccn_charbuf_destroy(&cob);
-            ccn_set_run_timeout(h, 0);
-            
             ccn_charbuf_destroy(&uri);
+            
+            ccn_set_run_timeout(h, 0);
             
             ret = CCN_UPCALL_RESULT_INTEREST_CONSUMED;
             break;
@@ -549,6 +542,7 @@ void WriteToRepo(char* dst, char* value)
                          action,
                          template);
     ccn_run(ccn, -1);
+    ccn_destroy(&ccn);
     
 }
 
@@ -1206,11 +1200,12 @@ int main(int argc, const char * argv[])
     // *** Asset Sync *** //
     // Write Slice to Repo
     int res = WriteSlice(PREFIX, TOPO);
-    printf("%d\n", res);
+    //printf("%d\n", res);
 
     // Write to repo
     //printf("writting to repo...\n");
-    WriteToRepo(PREFIX, "我有一头小毛驴");
+    char* carname = "ccnx:/ndn/ucla.edu/apps/EgalCar/0/24680";
+    WriteToRepo(carname, "我有一头小毛驴");
     WatchOverRepo(PREFIX, TOPO);
     
     
