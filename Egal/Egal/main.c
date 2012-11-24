@@ -624,7 +624,7 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             
             ccn_content_get_value(info->content_ccnb, getPCOoffset(info->pco, CCN_PCO_E),
                                   info->pco, &ptr, &length);
-            printf("%s\n", ptr);
+            printf("%d %s\n", CCN_PCO_E, ptr);
             // ccn_set_run_timeout(info->h, 0);
             break;
         case CCN_UPCALL_CONTENT_BAD:
@@ -662,7 +662,9 @@ void ReadFromRepo(char* dst)
         printf("while parsing name %s\n", dst);
         printf("-- by ReadFromRepo\n");
     }
-    
+    ccn_create_version(ccn, nm, CCN_V_LOW, 0, 0);// without version, Unity crashes
+    // but CCN_V_NOW for WriteToRepo() does not work here,
+    // CCN_V_LOW seems to do the work :)
     
     struct AssetStruct *Data = NEW_STRUCT(1, AssetStruct);
         
