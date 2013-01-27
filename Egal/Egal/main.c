@@ -625,6 +625,7 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             ccn_content_get_value(info->content_ccnb, getPCOoffset(info->pco, CCN_PCO_E),
                                   info->pco, &ptr, &length);
             printf("%d %s\n", CCN_PCO_E, ptr);
+            printf("%s\n", selfp->data);
             // ccn_set_run_timeout(info->h, 0);
             break;
         case CCN_UPCALL_CONTENT_BAD:
@@ -666,7 +667,7 @@ void ReadFromRepo(char* dst)
     // but CCN_V_NOW for WriteToRepo() does not work here,
     // CCN_V_LOW seems to do the work :)
     
-    struct AssetStruct *Data = NEW_STRUCT(1, AssetStruct);
+    //struct AssetStruct *Data = NEW_STRUCT(1, AssetStruct);
         
     struct ccn_charbuf *template = SyncGenInterest(NULL,
                                                    1,
@@ -676,7 +677,7 @@ void ReadFromRepo(char* dst)
     struct ccn_closure *action = NEW_STRUCT(1, ccn_closure);
     action->p = ReadCallBack;
     
-    action->data = Data;
+    action->data = (void*)"Blue is my name";
     
     res = ccn_express_interest(ccn,
                                nm,
