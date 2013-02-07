@@ -622,11 +622,19 @@ static enum ccn_upcall_res ReadCallBack(struct ccn_closure *selfp,
             unsigned char* ptr = NULL;
             size_t length = 0;
             
+            /*
             ccn_ref_tagged_BLOB(CCN_DTAG_Name, info->content_ccnb,
                                 info->pco->offset[CCN_PCO_B_Name],
                                 info->pco->offset[CCN_PCO_E_Name],
                                 &ptr, &length);
             printf("%s \n", ptr);
+            
+            ccn_ref_tagged_BLOB(CCN_DTAG_Timestamp, info->content_ccnb,
+                                info->pco->offset[CCN_PCO_B_Timestamp],
+                                info->pco->offset[CCN_PCO_E_Timestamp],
+                                &ptr, &length);
+            printf("%s \n", ptr);
+            */
             
             ccn_content_get_value(info->content_ccnb, getPCOoffset(info->pco, CCN_PCO_E),
                                   info->pco, &ptr, &length);
