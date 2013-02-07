@@ -942,34 +942,6 @@ void AskForState(struct ccn* ccn, char* name, int timeout)
 }
 
 
-struct StateBuffer
-{
-    char* state;
-    int statelens;
-};
-
-static struct StateBuffer* PtrToStateBuffer = NULL;
-int WriteToStateBuffer(char* state, int statelens)
-{
-    // this is for C# to write to the State Buffer
-    if (PtrToStateBuffer == NULL) {
-        PtrToStateBuffer = malloc(sizeof(struct StateBuffer));
-        PtrToStateBuffer->state = malloc(statelens);
-        PtrToStateBuffer->statelens = malloc(sizeof(int));
-        PtrToStateBuffer->statelens = statelens;
-            }
-    strcpy(PtrToStateBuffer->state, state);
-}
-
-char* ReadStateBuffer()
-{
-    return PtrToStateBuffer->state;
-}
-
-int ReadStateLens()
-{
-    return PtrToStateBuffer->statelens;
-}
 
 static enum ccn_upcall_res PublishState(struct ccn_closure *selfp,
                                         enum ccn_upcall_kind kind,
@@ -1001,15 +973,10 @@ static enum ccn_upcall_res PublishState(struct ccn_closure *selfp,
             struct ccn_charbuf *cb = ccn_charbuf_create(); // cb is content buffer
             struct ccn_charbuf *cob = ccn_charbuf_create();
             
-            int rs = ReadStateLens();
-            ccn_charbuf_reserve(cb, rs);
-            cb->length = rs;
-            char *ptr = ccn_charbuf_as_string(cb);
             
-            if (PtrToStateBuffer == NULL) {
-                return -1;
-            }                    
-            strcpy(ptr, PtrToStateBuffer->state);
+            ccn_charbuf_reserve(cb, 128);
+            char *ptr = ccn_charbuf_as_string(cb);
+            strcpy(ptr, "I'm Egal in Xcode.");
             
             // start signing ...
             struct ccn_signing_params sp = CCN_SIGNING_PARAMS_INIT;
@@ -1034,7 +1001,7 @@ static enum ccn_upcall_res PublishState(struct ccn_closure *selfp,
                              name,
                              &sp,
                              cp,
-                             rs);
+                             128);
             // is hash required?
             // not sure... just leave it here
             
@@ -1206,7 +1173,7 @@ int main(int argc, const char * argv[])
     // State Sync block should NOT
     // be tested together!
     
-    
+    /*
     // *** Asset Sync *** //
     // Write Slice to Repo
     int res = WriteSlice(PREFIX, TOPO);
@@ -1217,22 +1184,21 @@ int main(int argc, const char * argv[])
     char* carname = "ccnx:/ndn/ucla.edu/apps/EgalCar/0/24680";
     WriteToRepo(carname, "我有一头小毛驴");
     WatchOverRepo(PREFIX, TOPO);
+    */
     
     
-    /*
     // *** State Sync *** //
-    char* other = "ccnx:/ndn/ucla.edu/apps/EgalCar/desktop";
+    char* other = "ccnx:/ndn/ucla.edu/apps/EgalCar/standalone";
     char* me = "ccnx:/ndn/ucla.edu/apps/EgalCar/xcode";
     
     // just for test
-    WriteToStateBuffer("xcode", 10);
     struct ccn* h = GetHandle();
     while (1) {
         RegisterInterestFilter(h, me);
         AskForState(h, other, 1000);
         ccn_run(h, 1000);
     }
-     */
+     
 
 }
 
