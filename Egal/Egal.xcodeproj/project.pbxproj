@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D1261C7816EF71EF0058545F /* NameEnumeration.c in Sources */ = {isa = PBXBuildFile; fileRef = D1261C7716EF71EF0058545F /* NameEnumeration.c */; };
 		D1839B4715CA7FAF00D1CCAA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D1839B4615CA7FAF00D1CCAA /* Cocoa.framework */; };
 		D1839B5115CA7FAF00D1CCAA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D1839B4F15CA7FAF00D1CCAA /* InfoPlist.strings */; };
 		D1839B5915CABC1000D1CCAA /* libCCN.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1839B5815CABC1000D1CCAA /* libCCN.a */; };
@@ -20,6 +21,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		D1261C7716EF71EF0058545F /* NameEnumeration.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = NameEnumeration.c; sourceTree = "<group>"; };
+		D1261C7C16EF77030058545F /* NameEnumeration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NameEnumeration.h; sourceTree = "<group>"; };
 		D1839B4315CA7FAF00D1CCAA /* Egal.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Egal.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1839B4615CA7FAF00D1CCAA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		D1839B4915CA7FAF00D1CCAA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -162,6 +165,8 @@
 				D1A368181658F340000F7C6A /* main.c */,
 				D1A368191658F340000F7C6A /* main.h */,
 				D1839B4D15CA7FAF00D1CCAA /* Supporting Files */,
+				D1261C7716EF71EF0058545F /* NameEnumeration.c */,
+				D1261C7C16EF77030058545F /* NameEnumeration.h */,
 			);
 			path = Egal;
 			sourceTree = "<group>";
@@ -340,6 +345,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1A3681A1658F340000F7C6A /* main.c in Sources */,
+				D1261C7816EF71EF0058545F /* NameEnumeration.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

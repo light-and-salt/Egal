@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D1261C7F16EF78C00058545F /* NameEnumeration.c in Sources */ = {isa = PBXBuildFile; fileRef = D1261C7E16EF78C00058545F /* NameEnumeration.c */; };
 		D19728D015CA6704003F6BEE /* libCCN.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D19728CF15CA6704003F6BEE /* libCCN.a */; };
 		D1A1313415CB6A0B00378429 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D1A1313315CB6A0B00378429 /* libcrypto.dylib */; };
 		D1A1313615CB6A1200378429 /* libexpat.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D1A1313515CB6A1200378429 /* libexpat.dylib */; };
@@ -28,6 +29,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D1261C7D16EF78C00058545F /* NameEnumeration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NameEnumeration.h; path = ../../Egal/Egal/NameEnumeration.h; sourceTree = "<group>"; };
+		D1261C7E16EF78C00058545F /* NameEnumeration.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = NameEnumeration.c; path = ../../Egal/Egal/NameEnumeration.c; sourceTree = "<group>"; };
 		D19728C215CA6648003F6BEE /* TEST */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TEST; sourceTree = BUILT_PRODUCTS_DIR; };
 		D19728CF15CA6704003F6BEE /* libCCN.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libCCN.a; path = "../../../Library/Developer/Xcode/DerivedData/Egal-ehzznftbointrffybwhbuidzljsb/Build/Products/Debug/libCCN.a"; sourceTree = "<group>"; };
 		D1A1313315CB6A0B00378429 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
@@ -138,6 +141,8 @@
 		D1A130A615CB641C00378429 /* test */ = {
 			isa = PBXGroup;
 			children = (
+				D1261C7D16EF78C00058545F /* NameEnumeration.h */,
+				D1261C7E16EF78C00058545F /* NameEnumeration.c */,
 				D1A3692B1658F532000F7C6A /* header */,
 				D1A368E51658F3FD000F7C6A /* main.c */,
 				D1A368E61658F3FD000F7C6A /* main.h */,
@@ -296,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D1A368E71658F3FD000F7C6A /* main.c in Sources */,
+				D1261C7F16EF78C00058545F /* NameEnumeration.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

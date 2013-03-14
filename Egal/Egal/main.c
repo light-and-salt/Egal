@@ -47,6 +47,7 @@
 
 
 #include "main.h"
+#include "NameEnumeration.h"
 
 #define MAX_READ_LEN 1000000
 #define DEFAULT_CMD_TIMEOUT 6000
@@ -1167,13 +1168,14 @@ void *KeepRunning(void *threadid)
     }
 }
 
+/*
 int main(int argc, const char * argv[])
 {
     // Asset Sync block and
     // State Sync block should NOT
     // be tested together!
     
-    /*
+    
     // *** Asset Sync *** //
     // Write Slice to Repo
     int res = WriteSlice(PREFIX, TOPO);
@@ -1184,7 +1186,8 @@ int main(int argc, const char * argv[])
     char* carname = "ccnx:/ndn/ucla.edu/apps/EgalCar/0/24680";
     WriteToRepo(carname, "我有一头小毛驴");
     WatchOverRepo(PREFIX, TOPO);
-    */
+    
+    
     
     
     // *** State Sync *** //
@@ -1193,15 +1196,18 @@ int main(int argc, const char * argv[])
     
     // just for test
     struct ccn* h = GetHandle();
+    RegisterInterestFilter(h, me);
+    
     while (1) {
-        RegisterInterestFilter(h, me);
+        
         AskForState(h, other, 1000);
         ccn_run(h, 1000);
     }
      
-
+    
+    
 }
 
-
+*/
 
 
