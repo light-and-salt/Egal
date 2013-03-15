@@ -9,6 +9,6 @@
 #ifndef Egal_NameEnumeration_h
 #define Egal_NameEnumeration_h
 
-int EnumerateNames();
+int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* templ);
 
 #endif

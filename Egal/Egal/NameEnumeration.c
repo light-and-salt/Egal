@@ -7,7 +7,6 @@
 //
 
 #include <stdio.h>
-#include "main.h"
 #include "SyncMacros.h"
 #include "ccn.h"
 
@@ -20,7 +19,9 @@
 #include <ccn/ccn.h>
 #include <ccn/charbuf.h>
 #include <ccn/uri.h>
-int EnumerateNames(struct ccn_charbuf* nm);
+
+
+int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* templ);
 
 enum ccn_upcall_res CallBack(
                                 struct ccn_closure *selfp,
@@ -28,57 +29,54 @@ enum ccn_upcall_res CallBack(
                                 struct ccn_upcall_info *info  /** details about the event */
                                 )
 {
+    static uintmax_t seg = 0;
+    
     switch (kind) {
-            
         case CCN_UPCALL_CONTENT_UNVERIFIED:
         case CCN_UPCALL_CONTENT:
             printf("CCN_UPCALL_CONTENT\n");
 
-            int res = 0;
-            unsigned char *comp;
-            size_t size;
-
-            if(ccn_is_final_block(info)==0) //this is cute :)
-            {
-                struct ccn_charbuf * c = ccn_charbuf_create();
-                size_t length_of_name = info->pco->name_ncomps;
-                printf("%d\n", length_of_name);
-                ccn_name_init(c);
-                //res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Component0], info->pco->offset[CCN_PCO_E_ComponentLast]);
-                res = ccn_name_append_components(c, info->content_ccnb, info->content_comps->buf[0], info->content_comps->buf[7]);
-                /*
-                struct ccn_indexbuf* components;
-                components = ccn_indexbuf_create();
-                res = ccn_name_split(c, components);
-                printf("%d \n", res);
-                */
-                /*
-                ccn_name_comp_get(c->buf, NULL, 6, &comp, &size);
-                fwrite(comp, size, 1, stdout) -1;
-                printf("\n");
-                 */
-                //printf("%d\n", info->pco->name_ncomps);
-                //res = ccn_name_chop(c, components, -1);
-                //printf("%d \n", res);
-                //ccn_name_append_numeric(c, CCN_MARKER_SEQNUM, 1);
-                //res = ccn_name_next_sibling(c);
-                //printf("%d \n", res);
-                //EnumerateNames(c);
-            }
-
-            
             // *** Parse Content Object *** //
             unsigned char* ptr;
             size_t length = 0;
             ccn_content_get_value(info->content_ccnb, 0, info->pco, &ptr, &length);
-            //fwrite(ptr, length, 1, stdout) - 1;
+            fwrite(ptr, length, 1, stdout) - 1;
+            printf("\n");
             
+            
+            int res = 0;
+            unsigned char *comp;
+            size_t size;
+
+            if (ccn_is_final_block(info)==1) {
+                ccn_set_run_timeout(info->h, 0);
+            }
+            else if(ccn_is_final_block(info)==0) //this is cute :)
+            {
+                struct ccn_charbuf * c = ccn_charbuf_create();
+                size_t length_of_name = info->pco->name_ncomps;
+                
+                ccn_name_init(c);
+                //res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Component0], info->pco->offset[CCN_PCO_E_ComponentLast]);
+                res = ccn_name_append_components(c, info->content_ccnb, info->content_comps->buf[0], info->content_comps->buf[length_of_name]);
+                
+                struct ccn_indexbuf* components;
+                components = ccn_indexbuf_create();                
+                                
+                res = ccn_name_chop(c, NULL, -1);
+                //printf("%d\n", res);
+                                
+                res = ccn_name_append_numeric(c, CCN_MARKER_SEQNUM, seg++);
+                                                
+                EnumerateNames(info->h, c, NULL);
+            }
+                        
             
             break;
             
         case CCN_UPCALL_FINAL:
             printf("CCN_UPCALL_FINAL\n");
-            ccn_set_run_timeout(info->h, 0);
+            free(selfp);
             break;
             
         default:
@@ -89,21 +87,12 @@ enum ccn_upcall_res CallBack(
 }
 
 
-int EnumerateNames(struct ccn_charbuf* nm)
+int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* templ)
 {
-    struct ccn* ccn = GetHandle();
     
-    ccn_name_from_uri(nm, "ccnx:/ndn/ucla.edu/airports/%C1.E.be");
-    //ccn_name_append_numeric(nm, CCN_MARKER_SEQNUM, 0);
-    
-    struct ccn_closure *action = NEW_STRUCT(1, ccn_closure);
+    struct ccn_closure *action = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
     action->p = CallBack;
-    
-    ccn_express_interest(ccn, nm, action, NULL);
-
-    ccn_run(ccn, -1);
-    ccn_destroy(&ccn);
-        
+    ccn_express_interest(ccn, nm, action, templ);
     return 0;
 }
 
@@ -111,9 +100,16 @@ struct ccn_charbuf* name = NULL;
 
 int main()
 {
-    // *** Name Enumeration *** //
     name = ccn_charbuf_create();
-    EnumerateNames(name);
+    struct ccn* ccn = NULL;
+    ccn = ccn_create();
+    if (ccn_connect(ccn, NULL) == -1) {
+        printf("could not connect to ccnd.\n");
+    }
+    ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/airports/%C1.E.be");
+    EnumerateNames(ccn, name, NULL);
+    ccn_run(ccn, -1);
+    ccn_destroy(&ccn);
 
 }
 
