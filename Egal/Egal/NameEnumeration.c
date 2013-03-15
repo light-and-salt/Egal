@@ -28,48 +28,51 @@ enum ccn_upcall_res CallBack(
                                 struct ccn_upcall_info *info  /** details about the event */
                                 )
 {
-    //printf("upcall... %d\n", kind);
     switch (kind) {
             
         case CCN_UPCALL_CONTENT_UNVERIFIED:
         case CCN_UPCALL_CONTENT:
             printf("CCN_UPCALL_CONTENT\n");
-            // *** Check Final Block *** //
-            // printf("Am I the final block? %d\n", ccn_is_final_block(info)); //this is cute :)
-            
-            // *** Parse Name *** //
-            // can I print out the name here?
+
+            int res = 0;
             unsigned char *comp;
             size_t size;
-            int res = 0;
-            
-            struct ccn_charbuf * c = ccn_charbuf_create();
-            res = ccn_name_init(c);
 
-            res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Name], info->pco->offset[CCN_PCO_E_Name]);
-            
-            /*
-            ccn_name_comp_get(info->interest_ccnb, info->interest_comps, 1, &comp, &size);
-            printf("Name Component: %s %d\n", comp, size);
-            */
-            //printf("%s\n", ccn_charbuf_as_string(c));
-            //fwrite(c->buf, 256, 1, stdout)-1;
-            //printf("\n After the call: \n");
-            ccn_name_next_sibling(c);
-            //fwrite(c->buf, 256, 1, stdout)-1;
-            //printf("%s\n", ccn_charbuf_as_string(c));
-            //printf("\n");
-            
+            if(ccn_is_final_block(info)==0) //this is cute :)
+            {
+                struct ccn_charbuf * c = ccn_charbuf_create();
+                size_t length_of_name = info->pco->name_ncomps;
+                printf("%d\n", length_of_name);
+                ccn_name_init(c);
+                //res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Component0], info->pco->offset[CCN_PCO_E_ComponentLast]);
+                res = ccn_name_append_components(c, info->content_ccnb, info->content_comps->buf[0], info->content_comps->buf[7]);
+                /*
+                struct ccn_indexbuf* components;
+                components = ccn_indexbuf_create();
+                res = ccn_name_split(c, components);
+                printf("%d \n", res);
+                */
+                /*
+                ccn_name_comp_get(c->buf, NULL, 6, &comp, &size);
+                fwrite(comp, size, 1, stdout) -1;
+                printf("\n");
+                 */
+                //printf("%d\n", info->pco->name_ncomps);
+                //res = ccn_name_chop(c, components, -1);
+                //printf("%d \n", res);
+                //ccn_name_append_numeric(c, CCN_MARKER_SEQNUM, 1);
+                //res = ccn_name_next_sibling(c);
+                //printf("%d \n", res);
+                //EnumerateNames(c);
+            }
+
             
             // *** Parse Content Object *** //
             unsigned char* ptr;
             size_t length = 0;
             ccn_content_get_value(info->content_ccnb, 0, info->pco, &ptr, &length);
-            //printf("%d %d %s\n", length, strlen(ptr), ptr);
-            fwrite(ptr, length, 1, stdout) - 1;
+            //fwrite(ptr, length, 1, stdout) - 1;
             
-            
-            EnumerateNames(c);
             
             break;
             
