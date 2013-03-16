@@ -83,16 +83,17 @@ int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* 
     return 0;
 }
 
-struct ccn_charbuf* name = NULL;
 
 int main()
 {
-    name = ccn_charbuf_create();
+    
     struct ccn* ccn = NULL;
     ccn = ccn_create();
     if (ccn_connect(ccn, NULL) == -1) {
         printf("could not connect to ccnd.\n");
     }
+    
+    struct ccn_charbuf* name = ccn_charbuf_create();
     ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/airports/%C1.E.be");
     EnumerateNames(ccn, name, NULL);
     ccn_run(ccn, -1);
