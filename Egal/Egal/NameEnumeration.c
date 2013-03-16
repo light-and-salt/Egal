@@ -33,10 +33,39 @@ enum ccn_upcall_res CallBack(
             printf("CCN_UPCALL_CONTENT\n");
 
             // *** Parse Content Object *** //
-            unsigned char* ptr;
-            size_t length = 0;
-            ccn_content_get_value(info->content_ccnb, 0, info->pco, &ptr, &length);
-            fwrite(ptr, length, 1, stdout) - 1;
+            unsigned char* content_ptr;
+            size_t content_length = 0;
+            ccn_content_get_value(info->content_ccnb, 0, info->pco, &content_ptr, &content_length);
+            
+            
+            // *** Get Seg# From Name *** //
+            //size_t namestart = info->pco->offset[CCN_PCO_B_Name];
+            //size_t namestop = info->pco->offset[CCN_PCO_E_Name];
+            //unsigned char* name_ptr;
+            //size_t name_length = 0;
+            //printf("%d", ccn_ref_tagged_BLOB(CCN_DTAG_Name, info->content_ccnb, namestart, namestop, &name_ptr, name_length));
+            //struct ccn_indexbuf* indexbf = ccn_indexbuf_create();
+            //ccn_name_comp_get(info->content_ccnb, indexbf, 0, name_ptr, name_length);
+            //printf("%s\n", name_ptr);
+            
+            struct ccn_buf_decoder decoder;
+            struct ccn_buf_decoder *d;
+            struct ccn_parsed_Link parsed_link = {0};
+            struct ccn_parsed_Link *pl = &parsed_link;
+            d = ccn_buf_decoder_start(&decoder, content_ptr, content_length);
+            int i = ccn_parse_Collection_start(d);
+            while(ccn_parse_Collection_next(d, pl, NULL)>0)
+            {
+                size_t start = pl->offset[CCN_PL_B_Component0];
+                size_t stop = pl->offset[CCN_PL_E_ComponentLast];
+                unsigned char* component_ptr;
+                size_t component_length = 0;
+                ccn_ref_tagged_BLOB(CCN_DTAG_Component, content_ptr, start, stop, &component_ptr, component_length);
+                printf("%s\n", component_ptr);
+            }
+            
+            
+            fwrite(content_ptr, content_length, 1, stdout) - 1;
             printf("\n");
             
 
@@ -76,7 +105,6 @@ enum ccn_upcall_res CallBack(
 
 int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* templ)
 {
-    
     struct ccn_closure *action = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
     action->p = CallBack;
     ccn_express_interest(ccn, nm, action, templ);
@@ -86,7 +114,6 @@ int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* 
 
 int main()
 {
-    
     struct ccn* ccn = NULL;
     ccn = ccn_create();
     if (ccn_connect(ccn, NULL) == -1) {
