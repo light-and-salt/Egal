@@ -17,7 +17,14 @@
 #include <ccn/uri.h>
 
 
-int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* templ);
+struct NEData
+{
+    size_t seg;
+    char* ccnb;
+    size_t length;
+};
+
+int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct NEData* nedata, struct ccn_charbuf* templ);
 
 enum ccn_upcall_res CallBack(
                                 struct ccn_closure *selfp,
@@ -48,26 +55,22 @@ enum ccn_upcall_res CallBack(
             //ccn_name_comp_get(info->content_ccnb, indexbf, 0, name_ptr, name_length);
             //printf("%s\n", name_ptr);
             
-            struct ccn_buf_decoder decoder;
-            struct ccn_buf_decoder *d;
-            struct ccn_parsed_Link parsed_link = {0};
-            struct ccn_parsed_Link *pl = &parsed_link;
-            d = ccn_buf_decoder_start(&decoder, content_ptr, content_length);
-            int i = ccn_parse_Collection_start(d);
-            while(ccn_parse_Collection_next(d, pl, NULL)>0)
+                        
+            struct NEData* nedata = (struct NEData*)selfp->data;
+            if(seg == nedata->seg) // seg order is correct
             {
-                size_t start = pl->offset[CCN_PL_B_Component0];
-                size_t stop = pl->offset[CCN_PL_E_ComponentLast];
-                unsigned char* component_ptr;
-                size_t component_length = 0;
-                ccn_ref_tagged_BLOB(CCN_DTAG_Component, content_ptr, start, stop, &component_ptr, component_length);
-                printf("%s\n", component_ptr);
+                //fwrite(content_ptr, content_length, 1, stdout) - 1;
+                //printf("\n");
+                memcpy(nedata->ccnb + nedata->length, content_ptr, content_length);
+                nedata->seg++;
+                nedata->length+=content_length;
+                
+                //fwrite(nedata->ccnb, nedata->length, 1, stdout) -1;
+                //printf("\n");
             }
-            
-            
-            fwrite(content_ptr, content_length, 1, stdout) - 1;
-            printf("\n");
-            
+            else
+                printf("Hey we are out of order!\n");
+                        
 
             // *** Fetch Later Segments *** //
             if (ccn_is_final_block(info)==1) {
@@ -85,9 +88,9 @@ enum ccn_upcall_res CallBack(
                 
                 res = ccn_name_chop(c, NULL, -1);
                 //printf("%d\n", res);
-                res = ccn_name_append_numeric(c, CCN_MARKER_SEQNUM, seg++);
+                res = ccn_name_append_numeric(c, CCN_MARKER_SEQNUM, ++seg);
 
-                EnumerateNames(info->h, c, NULL);
+                EnumerateNames(info->h, c, selfp->data, NULL);
             }
             break;
             
@@ -103,14 +106,34 @@ enum ccn_upcall_res CallBack(
 }
 
 
-int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct ccn_charbuf* templ)
+int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct NEData* nedata, struct ccn_charbuf* templ)
 {
     struct ccn_closure *action = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
     action->p = CallBack;
+    action->data = nedata;
     ccn_express_interest(ccn, nm, action, templ);
     return 0;
 }
 
+void DecodeCCNB(struct NEData* nedata)
+{
+    struct ccn_buf_decoder decoder;
+    struct ccn_buf_decoder *d;
+    struct ccn_parsed_Link parsed_link = {0};
+    struct ccn_parsed_Link *pl = &parsed_link;
+    d = ccn_buf_decoder_start(&decoder, nedata->ccnb, nedata->length);
+    int i = ccn_parse_Collection_start(d);
+    while(ccn_parse_Collection_next(d, pl, NULL)>0)
+    {
+        size_t start = pl->offset[CCN_PL_B_Component0];
+        size_t stop = pl->offset[CCN_PL_E_ComponentLast];
+        unsigned char* component_ptr;
+        size_t component_length = 0;
+        ccn_ref_tagged_BLOB(CCN_DTAG_Component, nedata->ccnb, start, stop, &component_ptr, component_length);
+        printf("%s ", component_ptr);
+    }
+
+}
 
 int main()
 {
@@ -122,9 +145,18 @@ int main()
     
     struct ccn_charbuf* name = ccn_charbuf_create();
     ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/airports/%C1.E.be");
-    EnumerateNames(ccn, name, NULL);
+    
+    struct NEData* nedata = (struct NEData*)calloc(1, sizeof(struct NEData));
+    nedata->seg = 0;
+    nedata->length = 0;
+    char buffer[4096*50];
+    nedata->ccnb = buffer;
+    EnumerateNames(ccn, name, nedata, NULL);
     ccn_run(ccn, -1);
     ccn_destroy(&ccn);
+    
+    DecodeCCNB(nedata);
+
 
 }
 

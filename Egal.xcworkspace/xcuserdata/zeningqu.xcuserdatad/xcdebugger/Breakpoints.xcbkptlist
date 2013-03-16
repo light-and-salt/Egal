@@ -99,11 +99,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "Egal/Egal/NameEnumeration.c"
-         timestampString = "385141286.073095"
+         timestampString = "385144283.60588"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "107"
-         endingLineNumber = "107"
+         startingLineNumber = "110"
+         endingLineNumber = "110"
          landmarkName = "EnumerateNames()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -112,11 +112,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "Egal/Egal/NameEnumeration.c"
-         timestampString = "385140395.22708"
+         timestampString = "385144283.60588"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "83"
-         endingLineNumber = "83"
+         startingLineNumber = "86"
+         endingLineNumber = "86"
          landmarkName = "CallBack()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -125,37 +125,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "Egal/Egal/NameEnumeration.c"
-         timestampString = "385140395.22708"
+         timestampString = "385144283.60588"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "79"
-         endingLineNumber = "79"
-         landmarkName = "CallBack()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "Egal/Egal/NameEnumeration.c"
-         timestampString = "385140395.22708"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "53"
-         endingLineNumber = "53"
-         landmarkName = "CallBack()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "No"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "Egal/Egal/NameEnumeration.c"
-         timestampString = "385140395.22708"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "57"
-         endingLineNumber = "57"
+         startingLineNumber = "82"
+         endingLineNumber = "82"
          landmarkName = "CallBack()"
          landmarkType = "7">
       </FileBreakpoint>
