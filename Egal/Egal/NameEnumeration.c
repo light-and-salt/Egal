@@ -7,10 +7,6 @@
 //
 
 #include <stdio.h>
-#include "SyncMacros.h"
-#include "ccn.h"
-
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -43,16 +39,14 @@ enum ccn_upcall_res CallBack(
             fwrite(ptr, length, 1, stdout) - 1;
             printf("\n");
             
-            
-            int res = 0;
-            unsigned char *comp;
-            size_t size;
 
+            // *** Fetch Later Segments *** //
             if (ccn_is_final_block(info)==1) {
                 ccn_set_run_timeout(info->h, 0);
             }
             else if(ccn_is_final_block(info)==0) //this is cute :)
             {
+                int res = 0;
                 struct ccn_charbuf * c = ccn_charbuf_create();
                 size_t length_of_name = info->pco->name_ncomps;
                 
@@ -60,18 +54,12 @@ enum ccn_upcall_res CallBack(
                 //res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Component0], info->pco->offset[CCN_PCO_E_ComponentLast]);
                 res = ccn_name_append_components(c, info->content_ccnb, info->content_comps->buf[0], info->content_comps->buf[length_of_name]);
                 
-                struct ccn_indexbuf* components;
-                components = ccn_indexbuf_create();                
-                                
                 res = ccn_name_chop(c, NULL, -1);
                 //printf("%d\n", res);
-                                
                 res = ccn_name_append_numeric(c, CCN_MARKER_SEQNUM, seg++);
-                                                
+
                 EnumerateNames(info->h, c, NULL);
             }
-                        
-            
             break;
             
         case CCN_UPCALL_FINAL:
@@ -82,7 +70,6 @@ enum ccn_upcall_res CallBack(
         default:
             break;
     }
-    
     return CCN_UPCALL_RESULT_OK;
 }
 
