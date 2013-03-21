@@ -83,8 +83,8 @@ enum ccn_upcall_res CallBack(
                 size_t length_of_name = info->pco->name_ncomps;
                 
                 ccn_name_init(c);
-                //res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Component0], info->pco->offset[CCN_PCO_E_ComponentLast]);
-                res = ccn_name_append_components(c, info->content_ccnb, info->content_comps->buf[0], info->content_comps->buf[length_of_name]);
+                res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Component0], info->pco->offset[CCN_PCO_E_ComponentLast]);
+                //res = ccn_name_append_components(c, info->content_ccnb, info->content_comps->buf[0], info->content_comps->buf[length_of_name]);
                 
                 res = ccn_name_chop(c, NULL, -1);
                 //printf("%d\n", res);
@@ -130,7 +130,7 @@ void DecodeCCNB(struct NEData* nedata)
         unsigned char* component_ptr;
         size_t component_length = 0;
         ccn_ref_tagged_BLOB(CCN_DTAG_Component, nedata->ccnb, start, stop, &component_ptr, component_length);
-        printf("%s ", component_ptr);
+        printf("%s,", component_ptr);
     }
 
 }
