@@ -99,11 +99,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "Egal/Egal/NameEnumeration.c"
-         timestampString = "385144283.60588"
+         timestampString = "389643845.178378"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "110"
-         endingLineNumber = "110"
+         startingLineNumber = "114"
+         endingLineNumber = "114"
          landmarkName = "EnumerateNames()"
          landmarkType = "7">
       </FileBreakpoint>
@@ -117,7 +117,7 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "86"
          endingLineNumber = "86"
-         landmarkName = "CallBack()"
+         landmarkName = "NameEnumCallBack()"
          landmarkType = "7">
       </FileBreakpoint>
       <FileBreakpoint
@@ -130,7 +130,7 @@
          endingColumnNumber = "9223372036854775807"
          startingLineNumber = "82"
          endingLineNumber = "82"
-         landmarkName = "CallBack()"
+         landmarkName = "NameEnumCallBack()"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>

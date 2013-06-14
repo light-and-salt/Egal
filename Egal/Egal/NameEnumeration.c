@@ -26,7 +26,7 @@ struct NEData
 
 int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct NEData* nedata, struct ccn_charbuf* templ);
 
-enum ccn_upcall_res CallBack(
+enum ccn_upcall_res NameEnumCallBack(
                                 struct ccn_closure *selfp,
                                 enum ccn_upcall_kind kind,
                                 struct ccn_upcall_info *info  /** details about the event */
@@ -86,10 +86,11 @@ enum ccn_upcall_res CallBack(
                 res = ccn_name_append_components(c, info->content_ccnb, info->pco->offset[CCN_PCO_B_Component0], info->pco->offset[CCN_PCO_E_ComponentLast]);
                 //res = ccn_name_append_components(c, info->content_ccnb, info->content_comps->buf[0], info->content_comps->buf[length_of_name]);
                 
+                
                 res = ccn_name_chop(c, NULL, -1);
                 //printf("%d\n", res);
                 res = ccn_name_append_numeric(c, CCN_MARKER_SEQNUM, ++seg);
-
+                
                 EnumerateNames(info->h, c, selfp->data, NULL);
             }
             break;
@@ -109,7 +110,7 @@ enum ccn_upcall_res CallBack(
 int EnumerateNames(struct ccn* ccn, struct ccn_charbuf* nm, struct NEData* nedata, struct ccn_charbuf* templ)
 {
     struct ccn_closure *action = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
-    action->p = CallBack;
+    action->p = NameEnumCallBack;
     action->data = nedata;
     ccn_express_interest(ccn, nm, action, templ);
     return 0;
@@ -135,6 +136,7 @@ void DecodeCCNB(struct NEData* nedata)
 
 }
 
+/*
 int main()
 {
     struct ccn* ccn = NULL;
@@ -157,6 +159,5 @@ int main()
     
     DecodeCCNB(nedata);
 
-
 }
-
+*/
