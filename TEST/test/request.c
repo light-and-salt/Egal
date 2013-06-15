@@ -27,11 +27,18 @@ enum ccn_upcall_res RequestCallBack(
         case CCN_UPCALL_CONTENT:
             printf("CCN_UPCALL_CONTENT\n");
             
-            // *** Parse Content Object *** //
+            // *** Get Content Value *** //
             unsigned char* content_ptr;
             size_t content_length = 0;
             ccn_content_get_value(info->content_ccnb, 0, info->pco, &content_ptr, &content_length);
-            printf("%s\n", content_ptr);
+            printf("Content Value: %s\n\n", content_ptr);
+            
+            // *** Get Content Name *** //
+            struct ccn_charbuf *c = ccn_charbuf_create();
+            size_t ccnb_size = info->pco->offset[CCN_PCO_E];
+            ccn_uri_append(c, info->content_ccnb, ccnb_size, 1);
+            printf("Content name: %s\n", ccn_charbuf_as_string(c));
+            
             break;
                         
         case CCN_UPCALL_FINAL:
