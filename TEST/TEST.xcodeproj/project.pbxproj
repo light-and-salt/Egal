@@ -15,6 +15,7 @@
 		D1A1313A15CB6A2000378429 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D1A1313915CB6A2000378429 /* libxml2.dylib */; };
 		D1A368E71658F3FD000F7C6A /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D1A368E51658F3FD000F7C6A /* main.c */; };
 		D1CB4D86176A5605004D1AF5 /* request.c in Sources */ = {isa = PBXBuildFile; fileRef = D1CB4D85176A5605004D1AF5 /* request.c */; };
+		D1F07287176C21F20038FE86 /* requestall.c in Sources */ = {isa = PBXBuildFile; fileRef = D1F07286176C21F20038FE86 /* requestall.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -101,6 +102,7 @@
 		D1A3696A1658F532000F7C6A /* SyncTreeWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncTreeWorker.h; sourceTree = "<group>"; };
 		D1A3696B1658F532000F7C6A /* SyncUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SyncUtil.h; sourceTree = "<group>"; };
 		D1CB4D85176A5605004D1AF5 /* request.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = request.c; sourceTree = "<group>"; };
+		D1F07286176C21F20038FE86 /* requestall.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = requestall.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,6 +151,7 @@
 				D1A368E51658F3FD000F7C6A /* main.c */,
 				D1A368E61658F3FD000F7C6A /* main.h */,
 				D1CB4D85176A5605004D1AF5 /* request.c */,
+				D1F07286176C21F20038FE86 /* requestall.c */,
 			);
 			path = test;
 			sourceTree = "<group>";
@@ -306,6 +309,7 @@
 				D1A368E71658F3FD000F7C6A /* main.c in Sources */,
 				D1261C7F16EF78C00058545F /* NameEnumeration.c in Sources */,
 				D1CB4D86176A5605004D1AF5 /* request.c in Sources */,
+				D1F07287176C21F20038FE86 /* requestall.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

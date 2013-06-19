@@ -36,7 +36,7 @@ enum ccn_upcall_res RequestCallBack(
             // *** Get Content Name *** //
             struct ccn_charbuf *c = ccn_charbuf_create();
             size_t ccnb_size = info->pco->offset[CCN_PCO_E];
-            ccn_uri_append(c, info->content_ccnb, ccnb_size, 1);
+            ccn_uri_append(c, info->content_ccnb, ccnb_size, 0);
             printf("Content name: %s\n", ccn_charbuf_as_string(c));
             
             break;
@@ -53,7 +53,7 @@ enum ccn_upcall_res RequestCallBack(
     
     return CCN_UPCALL_RESULT_OK;
 }
-
+/*
 int main()
 {
     struct ccn* ccn = NULL;
@@ -75,3 +75,4 @@ int main()
 
     return 0;
 }
+*/
