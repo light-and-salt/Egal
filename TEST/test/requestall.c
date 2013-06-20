@@ -18,25 +18,10 @@
 
 
 struct upcalldata {
-    int magic; /* 856372 */
-    long *counter;
-    unsigned warn;
-    unsigned option;
     int n_excl;
-    int scope;
     struct ccn_charbuf **excl; /* Array of n_excl items */
 };
 
-static int /* for qsort */
-namecompare(const void *a, const void *b)
-{
-    const struct ccn_charbuf *aa = *(const struct ccn_charbuf **)a;
-    const struct ccn_charbuf *bb = *(const struct ccn_charbuf **)b;
-    int ans = ccn_compare_names(aa->buf, aa->length, bb->buf, bb->length);
-    if (ans == 0)
-        fprintf(stderr, "wassat? %d\n", __LINE__);
-    return (ans);
-}
 
 
 enum ccn_upcall_res RequestAllCallBack(
@@ -55,26 +40,21 @@ enum ccn_upcall_res RequestAllCallBack(
             size_t ccnb_size = info->pco->offset[CCN_PCO_E];
             ccn_uri_append(contentname, info->content_ccnb, ccnb_size, 0);
             printf("Content name: %s\n", ccn_charbuf_as_string(contentname));
-            
             // *** Get Content Value *** //
             unsigned char* content_ptr;
             size_t content_length = 0;
             ccn_content_get_value(info->content_ccnb, 0, info->pco, &content_ptr, &content_length);
             printf("Content Value: %s\n\n", content_ptr);
             
-                        // *** Express New Interest, Exclude Old Data *** //
-            struct ccn_charbuf *c = NULL;
-            struct ccn_charbuf *templ = NULL;
-            struct ccn_charbuf *comp = NULL;
-            const unsigned char *ccnb = NULL;
-            struct ccn_indexbuf *comps = NULL;
-            c = ccn_charbuf_create();
-            templ = ccn_charbuf_create();
-            comp = ccn_charbuf_create();
-            ccn_name_init(comp);
-            ccnb = info->content_ccnb;
-            comps = info->content_comps;
             
+            // *** Express New Interest, Exclude Old Data *** //
+            struct ccn_charbuf *c = ccn_charbuf_create();;
+            struct ccn_charbuf *templ = ccn_charbuf_create();;
+            struct ccn_charbuf *comp = ccn_charbuf_create();;
+            const unsigned char *ccnb = info->content_ccnb;;
+            struct ccn_indexbuf *comps = info->content_comps;;
+            
+            ccn_name_init(comp);
             ccn_name_init(c);
             int matched_comps = info->pi->prefix_comps;
             ccn_name_append_components(c, info->interest_ccnb,
@@ -86,12 +66,14 @@ enum ccn_upcall_res RequestAllCallBack(
 
             ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
             ccn_charbuf_append(templ, c->buf, c->length); /* Name */
+            
+
+            ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
+            
             struct upcalldata *data = selfp->data;
             data->excl = realloc(data->excl, (data->n_excl + 1) * sizeof(data->excl[0]));
             data->excl[data->n_excl++] = comp;
             comp = NULL;
-            qsort(data->excl, data->n_excl, sizeof(data->excl[0]), &namecompare);
-            ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
             int i;
             for (i = 0; i < data->n_excl; i++) {
                 comp = data->excl[i];
@@ -99,6 +81,7 @@ enum ccn_upcall_res RequestAllCallBack(
                 ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
             }
             comp = NULL;
+            
             ccn_charbuf_append_closer(templ); /* </Exclude> */
             ccn_charbuf_append_closer(templ); /* </Interest> */
             ccn_express_interest(info->h, c, selfp, templ);
@@ -130,7 +113,7 @@ int main()
     }
     
     struct ccn_charbuf* name = ccn_charbuf_create();
-    ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/apps/matryoshka/asteroid/octant/0/0/0/0/");
+    ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/apps/matryoshka/asteroid/octant/0/0/0/0");
     
     struct ccn_closure *action = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
     action->p = RequestAllCallBack;
@@ -140,6 +123,7 @@ int main()
     action->data = data;
     
     ccn_express_interest(ccn, name, action, NULL);
+    
     
     ccn_run(ccn, -1);
     ccn_destroy(&ccn);
