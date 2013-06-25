@@ -44,7 +44,7 @@ enum ccn_upcall_res RequestAllCallBack(
             unsigned char* content_ptr;
             size_t content_length = 0;
             ccn_content_get_value(info->content_ccnb, 0, info->pco, &content_ptr, &content_length);
-            printf("Content Value: %s\n\n", content_ptr);
+            //printf("Content Value: %s\n\n", content_ptr);
             
             
             // *** Express New Interest, Exclude Old Data *** //
@@ -56,34 +56,52 @@ enum ccn_upcall_res RequestAllCallBack(
             
             ccn_name_init(comp);
             ccn_name_init(c);
+            
             int matched_comps = info->pi->prefix_comps;
+            
+            ccn_name_append_str(c, "ndn");
+            ccn_name_append_str(c, "ucla.edu");
+            ccn_name_append_str(c, "apps");
+            ccn_name_append_str(c, "matryoshka");
+            ccn_name_append_str(c, "asteroid");
+            ccn_name_append_str(c, "octant");
+            ccn_name_append_str(c, "0");
+            ccn_name_append_str(c, "1");
+            ccn_name_append_str(c, "6");
+            ccn_name_append_str(c, "6");
+            ccn_name_append_str(comp, "02G");
+             
+            /*
             ccn_name_append_components(c, info->interest_ccnb,
                                              info->interest_comps->buf[0],
                                              info->interest_comps->buf[matched_comps]);
+            
+            
+            printf("%s \n", ccn_charbuf_as_string(c));
+            */
+            /*
             ccn_name_append_components(comp, ccnb,
                                        comps->buf[matched_comps],
                                        comps->buf[matched_comps + 1]);
+             */
 
             ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
-            ccn_charbuf_append(templ, c->buf, c->length); /* Name */
-            
+            ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+            ccn_charbuf_append_closer(templ); // </Name> 
 
             ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
-            
+            /*
             struct upcalldata *data = selfp->data;
             data->excl = realloc(data->excl, (data->n_excl + 1) * sizeof(data->excl[0]));
             data->excl[data->n_excl++] = comp;
-            comp = NULL;
-            int i;
-            for (i = 0; i < data->n_excl; i++) {
-                comp = data->excl[i];
-                if (comp->length < 4) abort();
-                ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
-            }
-            comp = NULL;
+             */
+            //comp = NULL;
+            ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
             
-            ccn_charbuf_append_closer(templ); /* </Exclude> */
-            ccn_charbuf_append_closer(templ); /* </Interest> */
+            ccn_charbuf_append_closer(templ); // </Exclude> 
+            ccn_charbuf_append_closer(templ); // </Interest> 
+        
+            
             ccn_express_interest(info->h, c, selfp, templ);
             ccn_charbuf_destroy(&templ);
             ccn_charbuf_destroy(&c);
@@ -113,7 +131,7 @@ int main()
     }
     
     struct ccn_charbuf* name = ccn_charbuf_create();
-    ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/apps/matryoshka/asteroid/octant/0/0/0/0");
+    ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/apps/matryoshka/asteroid/octant/0/1/6/6");
     
     struct ccn_closure *action = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
     action->p = RequestAllCallBack;
