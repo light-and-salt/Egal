@@ -59,6 +59,7 @@ enum ccn_upcall_res RequestAllCallBack(
             
             int matched_comps = info->pi->prefix_comps;
             
+            /*
             ccn_name_append_str(c, "ndn");
             ccn_name_append_str(c, "ucla.edu");
             ccn_name_append_str(c, "apps");
@@ -69,35 +70,42 @@ enum ccn_upcall_res RequestAllCallBack(
             ccn_name_append_str(c, "1");
             ccn_name_append_str(c, "6");
             ccn_name_append_str(c, "6");
-            ccn_name_append_str(comp, "02G");
+             */
+            //ccn_name_append_str(comp, "02G");
              
-            /*
+            
             ccn_name_append_components(c, info->interest_ccnb,
                                              info->interest_comps->buf[0],
                                              info->interest_comps->buf[matched_comps]);
             
             
             printf("%s \n", ccn_charbuf_as_string(c));
-            */
-            /*
+            
+            
             ccn_name_append_components(comp, ccnb,
                                        comps->buf[matched_comps],
                                        comps->buf[matched_comps + 1]);
-             */
+             
 
             ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
             ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
             ccn_charbuf_append_closer(templ); // </Name> 
 
             ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
-            /*
+            
             struct upcalldata *data = selfp->data;
             data->excl = realloc(data->excl, (data->n_excl + 1) * sizeof(data->excl[0]));
             data->excl[data->n_excl++] = comp;
-             */
+             
             //comp = NULL;
-            ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
+            //ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
             
+            for (int i = 0; i < data->n_excl; i++) {
+                comp = data->excl[i];
+                if (comp->length < 4) abort();
+                ccn_charbuf_append(templ, comp->buf + 1, comp->length - 2);
+            }
+
             ccn_charbuf_append_closer(templ); // </Exclude> 
             ccn_charbuf_append_closer(templ); // </Interest> 
         
@@ -111,10 +119,12 @@ enum ccn_upcall_res RequestAllCallBack(
             
         case CCN_UPCALL_FINAL:
             printf("CCN_UPCALL_FINAL\n");
-            ccn_set_run_timeout(info->h, 0);
+            //ccn_set_run_timeout(info->h, 0);
             free(selfp);
             break;
-            
+        case CCN_UPCALL_INTEREST_TIMED_OUT:
+            printf("CCN_UPCALL_INTEREST_TIMED_OUT\n");
+            break;
         default:
             break;
     }
@@ -122,6 +132,7 @@ enum ccn_upcall_res RequestAllCallBack(
     return CCN_UPCALL_RESULT_OK;
 }
 
+// nimbus: 0/1/6/3,0/0/7/3,0/3/4/5,0/2/5/5,0/1/6/5,0/0/7/5
 int main()
 {
     struct ccn* ccn = NULL;
@@ -131,7 +142,7 @@ int main()
     }
     
     struct ccn_charbuf* name = ccn_charbuf_create();
-    ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/apps/matryoshka/asteroid/octant/0/1/6/6");
+    ccn_name_from_uri(name, "ccnx:/ndn/ucla.edu/apps/matryoshka/asteroid/octant/0/1/6/6/3/4/7");
     
     struct ccn_closure *action = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
     action->p = RequestAllCallBack;
@@ -143,7 +154,22 @@ int main()
     ccn_express_interest(ccn, name, action, NULL);
     
     
+    struct ccn_charbuf* name2 = ccn_charbuf_create();
+    ccn_name_from_uri(name2, "ccnx:/ndn/ucla.edu/apps/matryoshka/asteroid/octant/0/1/6/6/3/5/6");
+    
+    struct ccn_closure *action2 = (struct ccn_closure*)calloc(1, sizeof(struct ccn_closure));
+    action2->p = RequestAllCallBack;
+    
+    struct upcalldata *data2 = NULL;
+    data2 = calloc(1, sizeof(*data2));
+    action2->data = data2;
+    
+    ccn_express_interest(ccn, name2, action2, NULL);
+
+    
     ccn_run(ccn, -1);
+    
+    
     ccn_destroy(&ccn);
     
     return 0;
